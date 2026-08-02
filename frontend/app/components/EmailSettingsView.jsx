@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Button from "./ui/Button";
 import Field from "./ui/Field";
-import Panel from "./ui/Panel";
 import TextInput from "./ui/TextInput";
 import { request } from "../utils/api";
 
@@ -146,7 +145,7 @@ export default function EmailSettingsView({ provider, user, onReload, setNotice 
 
   return (
     <div className="page-content email-settings-page">
-      <Panel className="email-provider-panel" aria-labelledby="google-sender-heading">
+      <section className="email-content-section email-provider-panel" aria-labelledby="google-sender-heading">
         <div className="email-provider-heading">
           <div className="provider-mark" aria-hidden="true">
             G
@@ -256,9 +255,9 @@ export default function EmailSettingsView({ provider, user, onReload, setNotice 
             </Button>
           </div>
         )}
-      </Panel>
+      </section>
 
-      <Panel className="email-security-note">
+      <section className="email-content-section email-security-note">
         <h2>Connection security</h2>
         <div className="security-grid">
           <div>
@@ -274,7 +273,7 @@ export default function EmailSettingsView({ provider, user, onReload, setNotice 
             <span>Only authenticated Admin users can connect, test, change, or disconnect the sender.</span>
           </div>
         </div>
-      </Panel>
+      </section>
     </div>
   );
 }

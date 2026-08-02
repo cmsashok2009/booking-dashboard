@@ -4,6 +4,7 @@ import {
   createBookingTemplate,
   createUserTemplate,
   parseCsv,
+  reconcileSeededDemoUsers,
   seedData,
   upsertBookings,
   upsertUsers,
@@ -169,4 +170,41 @@ test("lookup option updates should remove blanks and duplicates", () => {
   const options = ["TO BE CANCELLED", "", "TO BE CANCELLED", "NOT YET DECIDED"].map((item) => item.trim()).filter(Boolean);
   const uniqueOptions = [...new Set(options)];
   assert.deepEqual(uniqueOptions, ["TO BE CANCELLED", "NOT YET DECIDED"]);
+});
+
+test("production reconciliation removes only unchanged seeded demo users", () => {
+  const seeded = seedData();
+  const customUser = { id: "u-custom", name: "Custom User", email: "custom@example.com", role: "Area Manager", status: "active" };
+  const changedSeedIdentity = { ...seeded.users.find((user) => user.id === "u-am-west"), email: "real.manager@company.test" };
+  const data = { users: [...seeded.users.filter((user) => user.id !== "u-am-west"), changedSeedIdentity, customUser] };
+
+  const changed = reconcileSeededDemoUsers(data, seeded.users, false);
+
+  assert.equal(changed, true);
+  assert.equal(data.users.some((user) => user.email === "am.central@example.com"), false);
+  assert.equal(data.users.some((user) => user.email === "real.manager@company.test"), true);
+  assert.equal(data.users.some((user) => user.id === "u-custom"), true);
+  assert.equal(data.users.some((user) => user.id === "u-admin"), true);
+});
+
+
+test("single and bulk validation reject inactive or unknown reference data", () => {
+  const db = seedData();
+  db.regions = [{ id: "region-west", name: "West", status: "inactive" }];
+  db.dealerCodes = [{ id: "dealer-abcd", code: "ABCD", region: "West", status: "inactive" }];
+  const row = {
+    Name: "Reference Test",
+    Email: "reference.test@example.com",
+    Role: "Area Manager",
+    Region: "West",
+    "Dealer Code": "ABCD",
+    "Reporting Manager Email": "rm.west@example.com",
+    Status: "active"
+  };
+  const single = validateSingleUser(row, db);
+  const bulk = validateUserRows([row], db);
+  assert.equal(single.valid, false);
+  assert.equal(bulk.valid, false);
+  assert.ok(single.errors.some((error) => error.columnName === "Region" && error.errorMessage.includes("Reference Data")));
+  assert.ok(single.errors.some((error) => error.columnName === "Dealer Code"));
 });

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { request } from "../../utils/api";
 import { paginationItems } from "../../utils/pagination";
 import Button from "../../components/ui/Button";
 import CloseButton from "../../components/ui/CloseButton";
+import SideDrawer from "../../components/ui/SideDrawer";
+import RichTextEditor from "../../components/ui/RichTextEditor";
 import TextArea from "../../components/ui/TextArea";
 import TextInput from "../../components/ui/TextInput";
 export const STEP_ORDER = ["validation", "template", "recipients", "delivery"];
@@ -25,7 +27,6 @@ export function TemplateQuickEditor({ template, user, onClose, onSaved, setNotic
   const [draft, setDraft] = useState(() => ({ ...template }));
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState([]);
-  const dialogRef = useRef(null);
   const initial = useMemo(
     () => JSON.stringify(Object.fromEntries(TEMPLATE_FIELDS.map((key) => [key, template?.[key] || ""]))),
     [template]
@@ -68,43 +69,15 @@ export function TemplateQuickEditor({ template, user, onClose, onSaved, setNotic
     }
   }
 
-  useEffect(() => {
-    const closeOnEscape = (event) => {
-      if (event.key === "Escape") saveAndClose();
-      if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = [
-        ...dialogRef.current.querySelectorAll(
-          'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
-      ];
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", closeOnEscape);
-    window.requestAnimationFrame(() => dialogRef.current?.querySelector("input")?.focus());
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  });
 
   return (
-    <div
-      className="modal-backdrop nested-modal-backdrop"
-      onMouseDown={(event) => event.target === event.currentTarget && saveAndClose()}
+    <SideDrawer
+      className="template-quick-editor-drawer"
+      backdropClassName="template-quick-editor-backdrop"
+      labelledBy="quick-template-editor-title"
+      closeDisabled={saving}
+      onClose={saveAndClose}
     >
-      <section
-        ref={dialogRef}
-        className="modal template-quick-editor"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="quick-template-editor-title"
-      >
         <header className="modal-header">
           <div>
             <span className="modal-eyebrow">Activation template</span>
@@ -154,13 +127,13 @@ export function TemplateQuickEditor({ template, user, onClose, onSaved, setNotic
             </div>
             <div className="field">
               <label htmlFor="quick-template-html">HTML message</label>
-              <TextArea
+              <RichTextEditor
                 id="quick-template-html"
-                rows="6"
+                ariaLabel="HTML message"
                 value={draft.bodyHtml || ""}
-                onChange={(event) => setDraft((value) => ({ ...value, bodyHtml: event.target.value }))}
+                onChange={(bodyHtml) => setDraft((value) => ({ ...value, bodyHtml }))}
               />
-              <span className="field-hint">Optional. Plain text is used when an email client cannot display HTML.</span>
+              <span className="field-hint">Use the visual editor for formatting and clickable links. Plain text remains the fallback for email clients that cannot display HTML.</span>
             </div>
             {errors.length ? (
               <div className="template-errors" role="alert">
@@ -180,8 +153,7 @@ export function TemplateQuickEditor({ template, user, onClose, onSaved, setNotic
             {saving ? "Saving..." : "Done"}
           </Button>
         </footer>
-      </section>
-    </div>
+          </SideDrawer>
   );
 }
 

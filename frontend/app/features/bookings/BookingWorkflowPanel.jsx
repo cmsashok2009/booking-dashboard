@@ -7,6 +7,7 @@ import IconButton from "../../components/ui/IconButton";
 import Pagination from "../../components/Pagination";
 import Select from "../../components/ui/Select";
 import TextInput from "../../components/ui/TextInput";
+import TableEmptyState from "../../components/ui/TableEmptyState";
 
 export default function BookingWorkflowPanel({
   title = "Bookings",
@@ -30,7 +31,7 @@ export default function BookingWorkflowPanel({
     detailFilter === "all" && !search && !filters.region && !filters.wholesaleInput && !filters.retailInput;
 
   return (
-    <section id="booking-workflow-panel" className="panel" role="tabpanel">
+    <section className="booking-content-section">
       <div className="section-heading-row">
         <div>
           <h2>{activeTitle}</h2>
@@ -105,57 +106,62 @@ export default function BookingWorkflowPanel({
           </svg>
         </IconButton>
       </div>
-      <div className="table-wrap">
-        <table className="bookings-table">
-          <thead>
-            <tr>
-              <th className="sticky-col sticky-sales">Sales Order</th>
-              <th className="sticky-col sticky-dealer">Dealer</th>
-              <th>Customer</th>
-              <th>Phone</th>
-              <th>Region</th>
-              <th>Model</th>
-              <th>Variant</th>
-              <th>AVL Status</th>
-              <th>Booking Category</th>
-              <th>WS Planning</th>
-              <th className="wide-input-col">Wholesale Input</th>
-              <th className="wide-input-col">Retail Input</th>
-              <th className="sticky-action">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageRows.length ? (
-              pageRows.map((booking) => (
-                <tr key={booking.id}>
-                  <td className="sticky-col sticky-sales">{displayValue(booking.salesOrderId)}</td>
-                  <td className="sticky-col sticky-dealer">{displayValue(booking.dealerCode)}</td>
-                  <td>{displayValue(`${booking.contactFirstName || ""} ${booking.contactLastName || ""}`.trim())}</td>
-                  <td>{displayValue(booking.phoneNumber)}</td>
-                  <td>{displayValue(booking.region)}</td>
-                  <td>{displayValue(booking.model)}</td>
-                  <td>{displayValue(booking.variant)}</td>
-                  <td>
-                    <span className="badge warn">{displayValue(booking.avlStatus)}</span>
-                  </td>
-                  <td>{displayValue(booking.areaInputs?.bookingCategory)}</td>
-                  <td>{displayValue(booking.areaInputs?.wsPlanning)}</td>
-                  <td className="wide-input-col">{displayValue(booking.regionalInputs?.wholesaleInput)}</td>
-                  <td className="wide-input-col">{displayValue(booking.regionalInputs?.retailInput)}</td>
-                  <td className="sticky-action">
-                    <Button variant="secondary" onClick={() => onOpenBooking(booking)}>
-                      Open
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+      <div className={`booking-table-viewport${pageRows.length ? "" : " is-empty"}`}>
+        <div className="table-wrap">
+          <table className="bookings-table">
+            <thead>
               <tr>
-                <td colSpan="13">No records found.</td>
+                <th className="sticky-col sticky-sales">Sales Order</th>
+                <th className="sticky-col sticky-dealer">Dealer</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Region</th>
+                <th>Model</th>
+                <th>Variant</th>
+                <th>AVL Status</th>
+                <th>Booking Category</th>
+                <th>WS Planning</th>
+                <th className="wide-input-col">Wholesale Input</th>
+                <th className="wide-input-col">Retail Input</th>
+                <th className="sticky-action">Action</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pageRows.length
+                ? pageRows.map((booking) => (
+                    <tr key={booking.id}>
+                      <td className="sticky-col sticky-sales">{displayValue(booking.salesOrderId)}</td>
+                      <td className="sticky-col sticky-dealer">{displayValue(booking.dealerCode)}</td>
+                      <td>
+                        {displayValue(`${booking.contactFirstName || ""} ${booking.contactLastName || ""}`.trim())}
+                      </td>
+                      <td>{displayValue(booking.phoneNumber)}</td>
+                      <td>{displayValue(booking.region)}</td>
+                      <td>{displayValue(booking.model)}</td>
+                      <td>{displayValue(booking.variant)}</td>
+                      <td>
+                        <span className="badge warn">{displayValue(booking.avlStatus)}</span>
+                      </td>
+                      <td>{displayValue(booking.areaInputs?.bookingCategory)}</td>
+                      <td>{displayValue(booking.areaInputs?.wsPlanning)}</td>
+                      <td className="wide-input-col">{displayValue(booking.regionalInputs?.wholesaleInput)}</td>
+                      <td className="wide-input-col">{displayValue(booking.regionalInputs?.retailInput)}</td>
+                      <td className="sticky-action">
+                        <Button variant="secondary" onClick={() => onOpenBooking(booking)}>
+                          Open
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                : null}
+            </tbody>
+          </table>
+        </div>
+        {!pageRows.length ? (
+          <div className="table-empty-overlay" role="status">
+            <TableEmptyState description="No records match the current booking view." />
+          </div>
+        ) : null}
       </div>
       <Pagination page={page} totalRows={bookings.length} onPageChange={onPageChange} />
     </section>

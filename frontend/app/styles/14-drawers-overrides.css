@@ -1,4 +1,4 @@
-﻿/* Booking details side drawer */
+/* Booking details side drawer */
 .booking-detail-backdrop {
   display: flex;
   align-items: stretch;
@@ -233,6 +233,22 @@ button.app-button.outline:disabled {
   font-weight: 700;
 }
 
+.activation-warning {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--palette-b96b00);
+  border-radius: 6px;
+  background: var(--palette-fff8eb);
+  color: var(--palette-5f6878);
+}
+.single-user-drawer .activation-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .admin-temporary-password-footer {
   flex: 0 0 auto;
   display: flex;
@@ -251,5 +267,143 @@ button.app-button.outline:disabled {
   .admin-temporary-password-footer,
   .admin-temporary-password-complete {
     padding: 18px;
+  }
+}
+
+/* Single-user access drawer */
+.single-user-drawer {
+  width: min(720px, 100vw);
+  display: flex;
+  flex-direction: column;
+}
+
+.single-user-drawer-header,
+.single-user-drawer-body,
+.single-user-drawer-footer {
+  padding: 24px;
+}
+
+.single-user-drawer-header {
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.single-user-drawer-form {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.single-user-drawer-body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.single-user-drawer-footer {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.field-label-actions {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field-manage-button {
+  min-height: 32px;
+  padding: 4px 6px;
+  font-size: 0.82rem;
+}
+
+.field-manage-button .button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+@media (width <= 520px) {
+  .single-user-drawer-header,
+  .single-user-drawer-body,
+  .single-user-drawer-footer {
+    padding: 18px;
+  }
+
+  .single-user-drawer-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .single-user-drawer-footer .app-button {
+    width: 100%;
+  }
+}
+
+/* Bulk user onboarding drawer */
+.side-drawer.onboarding-drawer {
+  width: min(980px, 100vw);
+}
+
+.onboarding-drawer-layout {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+.onboarding-drawer .onboarding-header {
+  position: static;
+  z-index: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  align-items: start;
+  gap: 16px;
+  padding: 22px 24px 18px;
+}
+
+.onboarding-drawer .onboarding-header h2 {
+  margin: 5px 0 6px;
+}
+
+.onboarding-drawer .onboarding-header p {
+  margin: 0;
+}
+
+.onboarding-drawer-progress {
+  min-width: 0;
+}
+
+.onboarding-drawer .onboarding-stepper {
+  padding: 16px 24px;
+}
+
+.onboarding-drawer .onboarding-body {
+  min-width: 0;
+  min-height: 0;
+  padding: 22px 24px 28px;
+  overflow-y: auto;
+}
+
+@media (max-width: 760px) {
+  .side-drawer.onboarding-drawer {
+    width: 100vw;
+  }
+
+  .onboarding-drawer .onboarding-header,
+  .onboarding-drawer .onboarding-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .onboarding-drawer .onboarding-stepper {
+    padding-inline: 16px;
   }
 }

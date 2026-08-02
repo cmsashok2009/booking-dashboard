@@ -71,6 +71,20 @@ describe("onboarding initial steps", () => {
     formData.mockRestore();
   });
 
+  it("explains how to recover when email delivery is not ready", () => {
+    render(
+      <OnboardingInitialSteps
+        {...initialProps({
+          error:
+            "Activation emails were not sent. The users and onboarding progress are saved. Connect a Google sender in Email Configuration, then return here and try again."
+        })}
+      />
+    );
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Email delivery is not ready");
+    expect(alert).toHaveTextContent("users and onboarding progress are saved");
+    expect(alert).toHaveTextContent("Connect a Google sender in Email Configuration");
+  });
   it("renders validation outcomes and creates ready users", async () => {
     const workflow = {
       summary: { total: 2, ready: 1, invalid: 1 },

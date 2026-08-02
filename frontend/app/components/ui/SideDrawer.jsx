@@ -9,9 +9,10 @@ export default function SideDrawer({
   labelledBy,
   describedBy,
   closeDisabled = false,
+  suspended = false,
   onClose
 }) {
-  const drawerRef = useDialogLifecycle({ active: true, closeDisabled, onClose });
+  const drawerRef = useDialogLifecycle({ active: !suspended, closeDisabled, onClose });
 
   return (
     <div
@@ -25,6 +26,7 @@ export default function SideDrawer({
         aria-modal="true"
         aria-labelledby={labelledBy}
         aria-describedby={describedBy}
+        aria-hidden={suspended || undefined}
         tabIndex={-1}
       >
         {children}

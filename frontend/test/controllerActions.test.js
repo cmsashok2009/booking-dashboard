@@ -134,7 +134,13 @@ describe("user actions", () => {
     expect(ctx.setOnboardingWorkflowId).toHaveBeenCalledWith("w1");
     expect(ctx.setBulkUserModalOpen).toHaveBeenCalledWith(true);
 
-    mocks.request.mockRejectedValueOnce({
+        mocks.request.mockResolvedValueOnce({ id: "w1", resumed: true });
+    await actions.createSingleUser(values);
+    expect(ctx.setNotice).toHaveBeenLastCalledWith({
+      message: "Pending onboarding resumed. Continue from the saved invitation step.",
+      type: "success"
+    });
+mocks.request.mockRejectedValueOnce({
       message: "Rejected",
       payload: { errors: [{ columnName: "Email", errorMessage: "Exists" }] }
     });
@@ -234,9 +240,13 @@ describe("dashboard shell actions", () => {
   it("handles successful aborts, refresh warnings, and API errors", async () => {
     const ctx = context();
     const actions = createShellActions(ctx);
-    mocks.request.mockResolvedValueOnce({});
+    mocks.request.mockResolvedValueOnce({ removedUserCount: 1 });
     await actions.confirmAbortWorkflow();
     expect(ctx.setAbortWorkflow).toHaveBeenCalledWith(null);
+    expect(ctx.setNotice).toHaveBeenCalledWith({
+      type: "success",
+      message: "Onboarding aborted. 1 pending user was removed; audit history was retained."
+    });
     expect(ctx.setAbortingWorkflow).toHaveBeenLastCalledWith(false);
 
     ctx.loadBootstrap.mockRejectedValueOnce(new Error("refresh"));

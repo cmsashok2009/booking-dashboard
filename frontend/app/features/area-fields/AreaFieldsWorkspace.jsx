@@ -2,9 +2,28 @@
 
 import Button from "../../components/ui/Button";
 import Select from "../../components/ui/Select";
+import TabbedWorkspace from "../../components/ui/TabbedWorkspace";
 import TextInput from "../../components/ui/TextInput";
+import TableEmptyState from "../../components/ui/TableEmptyState";
 import { lookupFieldLabels } from "../../constants/dashboard";
 import { filterLookupOptions } from "./options";
+
+const ACCESS_FIELDS = ["roles", "regions", "dealerCodes"];
+const WORKFLOW_FIELDS = ["bookingCategory", "wholesalesFeedback", "wsPlanning", "cancellationReason"];
+
+const BUSINESS_SETTING_GROUPS = [
+  { id: "access", label: "Access Data", items: ACCESS_FIELDS.map((value) => ({ value, label: lookupFieldLabels[value] })) },
+  { id: "workflow", label: "Booking Workflow", items: WORKFLOW_FIELDS.map((value) => ({ value, label: lookupFieldLabels[value] })) }
+];
+
+const ROLE_SCOPES = {
+  AM: "Assigned booking updates",
+  RM: "Regional booking review",
+  ALL_INDIA_I: "National booking oversight",
+  ALL_INDIA_II: "National booking oversight",
+  ALL_INDIA: "National booking oversight",
+  ADMIN: "Application administration"
+};
 
 export default function AreaFieldsWorkspace({
   selectedField,
@@ -22,42 +41,47 @@ export default function AreaFieldsWorkspace({
   onUpdateOption,
   onOpenAdd
 }) {
-  const activeCount = options.filter((option) => option.status === "active").length;
   const filteredOptions = filterLookupOptions(options, search, status);
   const fieldLabel = lookupFieldLabels[selectedField];
+  const isRoles = selectedField === "roles";
+  const isDealerCodes = selectedField === "dealerCodes";
 
   return (
-    <>
-      <section className="area-fields-workspace-bar">
-        <div className="area-field-selector">
-          <label htmlFor="area-field-select">Dropdown field</label>
-          <Select id="area-field-select" value={selectedField} onChange={(event) => onFieldChange(event.target.value)}>
-            {Object.entries(lookupFieldLabels).map(([fieldCode, label]) => (
-              <option value={fieldCode} key={fieldCode}>
-                {label}
-              </option>
-            ))}
-          </Select>
-          <span>
-            {activeCount} active | {options.length - activeCount} inactive
-          </span>
-        </div>
-        <Button className="action-with-icon" type="button" onClick={onOpenAdd}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17">
-            <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          Add option
-        </Button>
-      </section>
-      <section className="panel area-options-panel">
+    <TabbedWorkspace
+      label="Business Settings"
+      groups={BUSINESS_SETTING_GROUPS}
+      value={selectedField}
+      onChange={onFieldChange}
+      idPrefix="business-settings"
+      className="business-settings-workspace"
+      canvasClassName="area-options-panel"
+    >
+      <section className="business-settings-content">
         <div className="section-heading-row">
           <div>
-            <h2>{fieldLabel} Options</h2>
-            <p>Active values are available for new booking updates. Inactive values remain in historical records.</p>
+            <span className="reference-data-kicker">
+              {ACCESS_FIELDS.includes(selectedField) ? "Access data" : "Booking workflow"}
+            </span>
+            <h2>{fieldLabel}</h2>
+            <p>
+              {isRoles
+                ? "Built-in roles are defined by the application and are used consistently across User Management."
+                : "Active values are available for new booking updates. Inactive values remain in historical records."}
+            </p>
           </div>
-          <small>
-            {filteredOptions.length} of {options.length} options
-          </small>
+          <div className="reference-data-actions">
+            <small>{filteredOptions.length} of {options.length} options</small>
+            {!isRoles ? (
+              <Button className="action-with-icon" type="button" onClick={onOpenAdd}>
+                <span aria-hidden="true">+</span>
+                {selectedField === "regions"
+                  ? "Add region"
+                  : selectedField === "dealerCodes"
+                    ? "Add dealer code"
+                    : "Add option"}
+              </Button>
+            ) : null}
+          </div>
         </div>
         <div className="table-toolbar area-options-toolbar">
           <div className="search-control">
@@ -66,14 +90,14 @@ export default function AreaFieldsWorkspace({
               <path d="m20 20-3.5-3.5" />
             </svg>
             <TextInput
-              aria-label="Search dropdown options"
+              aria-label={"Search " + fieldLabel}
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search options"
+              placeholder={"Search " + fieldLabel.toLowerCase()}
             />
           </div>
           <Select
-            aria-label="Filter options by status"
+            aria-label="Filter values by status"
             value={status}
             onChange={(event) => onStatusChange(event.target.value)}
           >
@@ -97,9 +121,10 @@ export default function AreaFieldsWorkspace({
           <table>
             <thead>
               <tr>
-                <th>Option</th>
+                <th>{isRoles ? "Role" : "Option"}</th>
+                {isRoles ? <th>Access scope</th> : null}
                 <th>Status</th>
-                <th>Actions</th>
+                {!isRoles ? <th>Actions</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -109,14 +134,14 @@ export default function AreaFieldsWorkspace({
                   return (
                     <tr key={option.id}>
                       <td>
-                        {isEditing ? (
+                        {isEditing && !isRoles ? (
                           <div className="option-edit-field">
                             <TextInput
                               className="option-label-input"
                               value={draft}
                               onChange={(event) => onDraftChange(event.target.value)}
                               data-dialog-focus
-                              aria-label={`Edit ${option.label}`}
+                              aria-label={"Edit " + option.label}
                             />
                             {!draft.trim() ? <small className="field-error">Option value is required.</small> : null}
                           </div>
@@ -124,57 +149,61 @@ export default function AreaFieldsWorkspace({
                           <span className="option-value">{option.label}</span>
                         )}
                       </td>
+                      {isRoles ? <td>{ROLE_SCOPES[option.code] || "No booking access assigned"}</td> : null}
                       <td>
-                        <span className={`status-pill ${option.status === "active" ? "active" : "inactive"}`}>
+                        <span className={"status-pill " + (option.status === "active" ? "active" : "inactive")}>
                           <span aria-hidden="true" />
                           {option.status === "active" ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td>
-                        <div className="area-option-actions">
-                          {isEditing ? (
-                            <>
-                              <Button
-                                type="button"
-                                disabled={!draft.trim()}
-                                onClick={() =>
-                                  onUpdateOption(option.id, { label: draft.trim() }, `${fieldLabel} option saved.`)
-                                }
-                              >
-                                Save
-                              </Button>
-                              <Button variant="secondary" type="button" onClick={onCancelEdit}>
-                                Cancel
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button variant="secondary" type="button" onClick={() => onStartEdit(option)}>
-                                Edit
-                              </Button>
-                              <Button
-                                variant={option.status === "active" ? "dangerQuiet" : "secondary"}
-                                type="button"
-                                onClick={() =>
-                                  onUpdateOption(
-                                    option.id,
-                                    { label: option.label, status: option.status === "active" ? "inactive" : "active" },
-                                    `${fieldLabel} option ${option.status === "active" ? "deactivated" : "reactivated"}.`
-                                  )
-                                }
-                              >
-                                {option.status === "active" ? "Deactivate" : "Reactivate"}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </td>
+                      {!isRoles ? (
+                        <td>
+                          <div className="area-option-actions">
+                            {isEditing ? (
+                              <>
+                                <Button
+                                  type="button"
+                                  disabled={!draft.trim()}
+                                  onClick={() =>
+                                    onUpdateOption(option.id, { label: draft.trim() }, fieldLabel + " option saved.")
+                                  }
+                                >
+                                  Save
+                                </Button>
+                                <Button variant="secondary" type="button" onClick={onCancelEdit}>
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button variant="secondary" type="button" onClick={() => onStartEdit(option)}>
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant={option.status === "active" ? "dangerQuiet" : "secondary"}
+                                  type="button"
+                                  onClick={() =>
+                                    onUpdateOption(
+                                      option.id,
+                                      { label: option.label, status: option.status === "active" ? "inactive" : "active" },
+                                      fieldLabel + " option " +
+                                        (option.status === "active" ? "deactivated." : "reactivated.")
+                                    )
+                                  }
+                                >
+                                  {option.status === "active" ? "Deactivate" : "Reactivate"}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td className="empty-state" colSpan="3">
+                  <td className="empty-state" colSpan={isRoles ? "3" : "3"}>
                     No options match the current filters.
                   </td>
                 </tr>
@@ -183,6 +212,6 @@ export default function AreaFieldsWorkspace({
           </table>
         </div>
       </section>
-    </>
+    </TabbedWorkspace>
   );
 }

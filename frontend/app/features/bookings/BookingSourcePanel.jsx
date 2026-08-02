@@ -7,6 +7,7 @@ import Pagination from "../../components/Pagination";
 import Button from "../../components/ui/Button";
 import Select from "../../components/ui/Select";
 import TextInput from "../../components/ui/TextInput";
+import TableEmptyState from "../../components/ui/TableEmptyState";
 import { filterBookingSourceRows } from "./sourceFilters";
 
 export default function BookingSourcePanel({ bookings, filters, page, regions, onFilterChange, onPageChange }) {
@@ -17,7 +18,7 @@ export default function BookingSourcePanel({ bookings, filters, page, regions, o
   const clearFilters = () => onFilterChange({ search: "", region: "", workflow: "" });
 
   return (
-    <section id="booking-excel-panel" className="panel excel-content-panel" role="tabpanel">
+    <section className="booking-content-section excel-content-panel">
       <div className="section-heading-row">
         <div>
           <h2>Excel Content</h2>

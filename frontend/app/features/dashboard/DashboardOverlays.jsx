@@ -25,13 +25,15 @@ export default function DashboardOverlays({ state, actions }) {
       />
       <SingleUserModal
         open={state.singleUserModalOpen}
-        roles={state.bootstrap?.roles || []}
+        roles={(state.bootstrap?.roleDefinitions || []).map((role) => role.name)}
         regions={state.bootstrap?.regions || []}
+        dealerCodes={state.bootstrap?.dealerCodes || []}
         roleDefinitions={state.bootstrap?.roleDefinitions || []}
         role={state.singleUserRole}
         errors={state.singleUserErrors}
         onRoleChange={actions.changeSingleUserRole}
         onClearError={actions.clearSingleUserError}
+        onDataChanged={actions.refreshAccessMasterData}
         onClose={actions.closeSingleUser}
         onSubmit={actions.createSingleUser}
       />
@@ -47,7 +49,9 @@ export default function DashboardOverlays({ state, actions }) {
       />
       <AddLookupOptionModal
         open={state.addOptionModalOpen}
+        fieldCode={state.selectedAreaField}
         fieldLabel={lookupFieldLabels[state.selectedAreaField]}
+        regions={state.bootstrap?.regions || []}
         error={state.addOptionError}
         onClearError={actions.clearAddOptionError}
         onClose={actions.closeAddOption}
@@ -73,7 +77,7 @@ export default function DashboardOverlays({ state, actions }) {
         open={Boolean(state.abortWorkflow)}
         eyebrow="Onboarding workflow"
         title="Abort this onboarding?"
-        description="This workflow will be removed from onboarding in progress. Users already created and the complete audit history will be retained."
+        description="This workflow will be removed from onboarding in progress. Pending users created by this workflow will also be removed from Current Users. Audit history will be retained."
         detailLabel="Workflow"
         detailValue={state.abortWorkflow?.fileName || "User upload"}
         confirmLabel="Abort onboarding"

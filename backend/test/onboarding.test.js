@@ -70,6 +70,26 @@ test("single-user onboarding rejects an existing email without retaining a faile
   assert.equal(db.onboardingWorkflows.length, before);
 });
 
+test("aborting single-user onboarding removes its pending user and allows a fresh journey", () => {
+  const db = seedData();
+  ensureOnboardingData(db);
+  const input = { Name: "Pending User", Email: "pending@example.com", Role: "All India", Region: "All" };
+  const original = createSingleUserOnboarding(db, input, "u-admin");
+  const userCountBeforeCreation = db.users.length - 1;
+  const cancelled = cancelOnboardingWorkflow(db, original.id, "u-admin");
+
+  assert.equal(cancelled.removedUserCount, 1);
+  assert.equal(db.users.length, userCountBeforeCreation);
+  assert.equal(db.users.some((item) => item.email === "pending@example.com"), false);
+
+  const restarted = createSingleUserOnboarding(db, input, "u-admin");
+
+  assert.notEqual(restarted.id, original.id);
+  assert.equal(restarted.status, "template_selection");
+  assert.equal(restarted.currentStep, "template");
+  assert.equal(db.users.length, userCountBeforeCreation + 1);
+  assert.equal(db.auditLogs.some((item) => item.action === "onboarding_batch_closed" && item.outcome?.removedPendingUsers === 1), true);
+});
 test("a zero-result onboarding batch can be closed without deleting audit history", () => {
   const db = seedData();
   ensureOnboardingData(db);
@@ -136,6 +156,40 @@ test("campaign creates digest-only activation records and cannot send twice", as
   assert.equal(JSON.stringify(db).includes("#token="), false);
 });
 
+test("campaign preserves onboarding progress and explains how to recover when Gmail is not connected", async () => {
+  const previousConfig = Object.fromEntries(["EMAIL_TRANSPORT", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI", "TOKEN_ENCRYPTION_KEY"].map((key) => [key, process.env[key]]));
+  Object.assign(process.env, {
+    EMAIL_TRANSPORT: "gmail_api",
+    GOOGLE_CLIENT_ID: "test-client-id",
+    GOOGLE_CLIENT_SECRET: "test-client-secret",
+    GOOGLE_REDIRECT_URI: "http://localhost:3000/api/admin/email-provider/google/callback",
+    TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64")
+  });
+  try {
+    const db = seedData();
+    ensureOnboardingData(db);
+    const workflow = createOnboardingWorkflow(db, parseCsv(validCsv()).rows, { actorId: "u-admin" });
+    importOnboardingUsers(db, workflow.id, "u-admin");
+    const template = cloneTemplateSample(db, "sample-activation-standard", "u-admin");
+    saveEmailTemplate(db, template.id, { status: "active" }, "u-admin");
+    selectWorkflowTemplate(db, workflow.id, template.id, "u-admin");
+
+    const result = await sendInvitationCampaign(db, workflow.id, "u-admin");
+
+    assert.equal(result.status, 503);
+    assert.equal(result.code, "EMAIL_NOT_CONNECTED");
+    assert.match(result.error, /users and onboarding progress are saved/i);
+    assert.match(result.error, /Connect a Google sender in Email Configuration/i);
+    assert.equal(workflow.currentStep, "recipients");
+    assert.equal(workflow.campaignId, "");
+    assert.equal(db.emailCampaigns.length, 0);
+  } finally {
+    for (const [key, value] of Object.entries(previousConfig)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
 test("activation requires a valid token and strong matching password", () => {
   const db = seedData();
   ensureOnboardingData(db);

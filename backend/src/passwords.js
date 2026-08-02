@@ -70,13 +70,23 @@ export async function requestPasswordReset(db, email, appUrl = "http://localhost
   return { accepted: true };
 }
 
-export function adminSetTemporaryPassword(db, userId, adminId, password) {
+export function adminSetTemporaryPassword(db, userId, adminId, password, { activatePending = false } = {}) {
   db.passwordResetTokens ||= [];
   db.sessions ||= [];
   db.auditLogs ||= [];
+  db.activationTokens ||= [];
   const user = db.users.find((item) => item.id === userId);
   if (!user) return { valid: false, status: 404, error: "User not found." };
-  if (user.status !== "active") return { valid: false, status: 409, error: "A temporary password can be set only for active users." };
+  const activating = user.status === "pending_invitation" && activatePending;
+  if (user.status !== "active" && !activating) {
+    return {
+      valid: false,
+      status: 409,
+      error: user.status === "pending_invitation"
+        ? "Activate this pending user while setting the temporary password."
+        : "A temporary password can be set only for active or pending-invitation users."
+    };
+  }
   const errors = passwordErrors(password);
   if (errors.length) return { valid: false, status: 422, error: "Password does not meet the security requirements.", errors };
   if (user.passwordHash && verifyPassword(String(password || ""), user.passwordHash)) {
@@ -86,10 +96,21 @@ export function adminSetTemporaryPassword(db, userId, adminId, password) {
   user.passwordHash = createPasswordHash(password);
   user.mustChangePassword = true;
   user.updatedAt = now;
+  if (activating) {
+    user.status = "active";
+    user.activatedAt = now;
+    for (const token of db.activationTokens.filter((item) => item.userId === user.id && !item.usedAt && !item.revokedAt)) token.revokedAt = now;
+  }
   for (const session of db.sessions.filter((item) => item.userId === user.id && !item.revokedAt)) session.revokedAt = now;
   for (const token of db.passwordResetTokens.filter((item) => item.userId === user.id && !item.usedAt && !item.revokedAt)) token.revokedAt = now;
-  db.auditLogs.unshift({ id: id("audit"), action: "admin_temporary_password_set", entityId: user.id, userId: adminId, createdAt: now });
-  return { valid: true, userId: user.id, mustChangePassword: true };
+  db.auditLogs.unshift({
+    id: id("audit"),
+    action: activating ? "admin_user_activated_with_temporary_password" : "admin_temporary_password_set",
+    entityId: user.id,
+    userId: adminId,
+    createdAt: now
+  });
+  return { valid: true, userId: user.id, mustChangePassword: true, activated: activating };
 }
 export function validatePasswordResetToken(db, rawToken) {
   const token = (db.passwordResetTokens || []).find((item) => item.tokenDigest === digest(rawToken));

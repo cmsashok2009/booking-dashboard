@@ -34,6 +34,9 @@ export const excelColumns = [
 ];
 
 export const lookupFieldLabels = {
+  roles: "Roles",
+  regions: "Regions",
+  dealerCodes: "Dealer Codes",
   bookingCategory: "Booking Category",
   wholesalesFeedback: "Wholesales Feedback",
   wsPlanning: "WS Planning",

@@ -1,7 +1,6 @@
 export function filterAndSortUsers(users, filters) {
   const search = filters.search.trim().toLowerCase();
   return [...users]
-    .filter((item) => item.role !== "Admin")
     .filter((item) => {
       const matchesSearch =
         !search ||

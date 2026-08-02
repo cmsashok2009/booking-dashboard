@@ -582,3 +582,63 @@ button.password-reveal-button:active {
   color: var(--palette-24466f);
   box-shadow: none;
 }
+
+.booking-table-viewport {
+  position: relative;
+}
+
+.booking-table-viewport.is-empty .table-wrap {
+  min-height: 270px;
+}
+
+.booking-table-viewport .table-empty-overlay {
+  position: absolute;
+  z-index: 5;
+  inset: 49px 0 17px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: var(--color-panel);
+}
+
+.booking-table-viewport .table-empty-state {
+  width: 100%;
+  min-height: 180px;
+}
+.table-empty-state {
+  position: relative;
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  overflow: hidden;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.table-empty-watermark {
+  position: absolute;
+  width: 112px;
+  height: 112px;
+  color: var(--palette-cbd5e1);
+  opacity: 0.28;
+  stroke-width: 1.2;
+}
+
+.table-empty-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 6px;
+  max-width: 420px;
+}
+
+.table-empty-copy strong {
+  color: var(--palette-344054);
+  font-size: 16px;
+}
+
+.table-empty-copy span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}

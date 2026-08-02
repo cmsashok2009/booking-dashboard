@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "./ui/Button";
 import Select from "./ui/Select";
 import TextInput from "./ui/TextInput";
+import TableEmptyState from "./ui/TableEmptyState";
 import NotificationToast from "./NotificationToast";
 import AdminTemporaryPasswordDrawer from "./AdminTemporaryPasswordDrawer";
 import { displayValue } from "../utils/bookings";
@@ -312,7 +313,15 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
         </table>
       </div>
 
-      <AdminTemporaryPasswordDrawer user={passwordUser} onClose={() => setPasswordUser(null)} />
+      <AdminTemporaryPasswordDrawer
+        user={passwordUser}
+        onClose={() => setPasswordUser(null)}
+        onUserUpdated={(updatedUser) => {
+          setRows((current) => current.map((row) => (row.id === updatedUser.id ? updatedUser : row)));
+          setPasswordUser(updatedUser);
+          onUserUpdated?.(updatedUser);
+        }}
+      />
 
       {confirmOpen ? (
         <div className="confirm-backdrop" role="presentation">

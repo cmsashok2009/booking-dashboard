@@ -23,3 +23,6 @@ export { default as FilterToolbar } from "./FilterToolbar";
 export { default as IconButton } from "./IconButton";
 export { default as NavigationItem } from "./NavigationItem";
 export { Tab, TabList } from "./Tabs";
+
+export { default as GroupedTabs } from "./GroupedTabs";
+export { default as TabbedWorkspace } from "./TabbedWorkspace";

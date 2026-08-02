@@ -1,5 +1,7 @@
 import Button from "./ui/Button";
-import ModalShell from "./ui/ModalShell";
+import CloseButton from "./ui/CloseButton";
+import RichTextEditor from "./ui/RichTextEditor";
+import SideDrawer from "./ui/SideDrawer";
 import Select from "./ui/Select";
 import TextArea from "./ui/TextArea";
 import TextInput from "./ui/TextInput";
@@ -21,84 +23,98 @@ function renderSample(text) {
 }
 
 export function SampleTemplatePreview({ preview, busy, onClose, onClone }) {
+  if (!preview) return null;
+
   return (
-    <ModalShell
-      open={Boolean(preview)}
-      onClose={onClose}
+    <SideDrawer
+      className="email-preview-drawer"
+      backdropClassName="email-preview-drawer-backdrop"
+      labelledBy="sample-preview-title"
+      describedBy="sample-preview-description"
       closeDisabled={busy}
-      className="email-preview-modal"
-      ariaLabelledBy="sample-preview-title"
+      onClose={onClose}
     >
-      <header className="modal-header">
-        <div>
-          <span className="modal-eyebrow">Starter template preview</span>
-          <h2 id="sample-preview-title">{preview?.name}</h2>
-          <p>{preview?.description}</p>
+      <div className="email-preview-drawer-layout">
+        <header className="email-preview-drawer-header">
+          <div>
+            <span className="modal-eyebrow">Starter template preview</span>
+            <h2 id="sample-preview-title">{preview.name}</h2>
+            <p id="sample-preview-description">{preview.description}</p>
+          </div>
+          <CloseButton
+            className="modal-close-button"
+            type="button"
+            disabled={busy}
+            onClick={onClose}
+            aria-label="Close preview"
+          />
+        </header>
+        <div className="email-preview-drawer-body">
+          <div className="sample-preview-meta">
+            <span>
+              <small>Type</small>
+              <strong>{String(preview.type || "activation").replaceAll("_", " ")}</strong>
+            </span>
+            <span>
+              <small>Reviewed</small>
+              <strong>{new Date(preview.reviewedAt).toLocaleDateString()}</strong>
+            </span>
+          </div>
+          <div className="email-message-preview">
+            <div>
+              <small>Subject</small>
+              <strong>{renderSample(preview.subject)}</strong>
+            </div>
+            <pre>{renderSample(preview.bodyText)}</pre>
+          </div>
+          <p className="preview-safety-note">
+            Sample recipient data is shown here. No activation link or email is created until an onboarding campaign
+            is confirmed.
+          </p>
         </div>
-        <Button
-          className="modal-close-button"
-          type="button"
-          disabled={busy}
-          onClick={onClose}
-          aria-label="Close preview"
-        >
-          <span aria-hidden="true">&times;</span>
-        </Button>
-      </header>
-      <div className="sample-preview-meta">
-        <span>
-          <small>Type</small>
-          <strong>{String(preview?.type || "activation").replaceAll("_", " ")}</strong>
-        </span>
-        <span>
-          <small>Reviewed</small>
-          <strong>{preview ? new Date(preview.reviewedAt).toLocaleDateString() : ""}</strong>
-        </span>
+        <footer className="email-preview-drawer-footer">
+          <Button variant="secondary" type="button" disabled={busy} onClick={onClose}>
+            Close
+          </Button>
+          <Button type="button" disabled={busy} onClick={() => onClone(preview)}>
+            {busy ? "Creating draft..." : "Use this template"}
+          </Button>
+        </footer>
       </div>
-      <div className="email-message-preview">
-        <div>
-          <small>Subject</small>
-          <strong>{renderSample(preview?.subject)}</strong>
-        </div>
-        <pre>{renderSample(preview?.bodyText)}</pre>
-      </div>
-      <p className="preview-safety-note">
-        Sample recipient data is shown here. No activation link or email is created until an onboarding campaign is
-        confirmed.
-      </p>
-      <div className="modal-form-actions">
-        <Button variant="secondary" type="button" disabled={busy} onClick={onClose}>
-          Close
-        </Button>
-        <Button type="button" disabled={busy} onClick={() => onClone(preview)}>
-          {busy ? "Creating draft..." : "Use this template"}
-        </Button>
-      </div>
-    </ModalShell>
+    </SideDrawer>
   );
 }
-
 export function TemplateEditor({ editor, setEditor, busy, errors, previewOpen, onPreview, onClose, onSave }) {
+  if (!editor) return null;
+
   return (
-    <ModalShell
-      open={Boolean(editor)}
-      onClose={onClose}
+    <SideDrawer
+      className="template-editor-drawer"
+      backdropClassName="template-editor-backdrop"
+      labelledBy="template-editor-title"
+      describedBy="template-editor-description"
+      closeDisabled={busy}
       suspended={previewOpen}
-      className="template-editor-modal"
-      ariaLabelledBy="template-editor-title"
+      onClose={onClose}
     >
-      <header className="modal-header template-editor-header">
-        <div>
-          <span className="modal-eyebrow">Organization template</span>
-          <h2 id="template-editor-title">Edit activation email</h2>
-          <p>Compose the reusable message and preview it with safe sample data before saving.</p>
-        </div>
-        <Button className="modal-close-button" type="button" onClick={onClose} aria-label="Close template editor">
-          <span aria-hidden="true">&times;</span>
-        </Button>
-      </header>
-      <form onSubmit={onSave}>
-        <div className="template-editor-layout">
+      <form className="template-editor-drawer-form" onSubmit={onSave}>
+        <header className="template-editor-drawer-header">
+          <div>
+            <span className="modal-eyebrow">Organization template</span>
+            <h2 id="template-editor-title">Edit activation email</h2>
+            <p id="template-editor-description">
+              Compose the reusable message and preview it with safe sample data before saving.
+            </p>
+          </div>
+          <CloseButton
+            className="modal-close-button"
+            type="button"
+            disabled={busy}
+            onClick={onClose}
+            aria-label="Close template editor"
+          />
+        </header>
+        <div className="template-editor-drawer-body">
           <aside className="merge-field-panel merge-field-toolbar" aria-label="Approved merge fields">
             <div>
               <h3>Approved merge fields</h3>
@@ -119,7 +135,7 @@ export function TemplateEditor({ editor, setEditor, busy, errors, previewOpen, o
                 id="template-name"
                 name="name"
                 required
-                value={editor?.name || ""}
+                value={editor.name || ""}
                 onChange={(event) => setEditor((current) => ({ ...current, name: event.target.value }))}
               />
             </div>
@@ -131,7 +147,7 @@ export function TemplateEditor({ editor, setEditor, busy, errors, previewOpen, o
                 id="template-subject"
                 name="subject"
                 required
-                value={editor?.subject || ""}
+                value={editor.subject || ""}
                 onChange={(event) => setEditor((current) => ({ ...current, subject: event.target.value }))}
               />
             </div>
@@ -143,22 +159,22 @@ export function TemplateEditor({ editor, setEditor, busy, errors, previewOpen, o
                 id="template-body-text"
                 name="bodyText"
                 required
-                rows="10"
-                value={editor?.bodyText || ""}
+                rows="8"
+                value={editor.bodyText || ""}
                 onChange={(event) => setEditor((current) => ({ ...current, bodyText: event.target.value }))}
               />
             </div>
             <div className="field">
               <label htmlFor="template-body-html">HTML message</label>
-              <TextArea
+              <RichTextEditor
                 id="template-body-html"
-                name="bodyHtml"
-                rows="7"
-                value={editor?.bodyHtml || ""}
-                onChange={(event) => setEditor((current) => ({ ...current, bodyHtml: event.target.value }))}
+                ariaLabel="HTML message"
+                value={editor.bodyHtml || ""}
+                onChange={(bodyHtml) => setEditor((current) => ({ ...current, bodyHtml }))}
               />
+              <input type="hidden" name="bodyHtml" value={editor.bodyHtml || ""} />
               <span className="field-hint">
-                Optional. Plain text remains the fallback for clients that do not display HTML.
+                Format the email visually and add clickable links. Plain text remains the fallback.
               </span>
             </div>
             <div className="field template-status-field">
@@ -166,7 +182,7 @@ export function TemplateEditor({ editor, setEditor, busy, errors, previewOpen, o
               <Select
                 id="template-status"
                 name="status"
-                value={editor?.status || "draft"}
+                value={editor.status || "draft"}
                 onChange={(event) => setEditor((current) => ({ ...current, status: event.target.value }))}
               >
                 <option value="draft">Draft</option>
@@ -186,73 +202,83 @@ export function TemplateEditor({ editor, setEditor, busy, errors, previewOpen, o
             ) : null}
           </div>
         </div>
-        <div className="modal-form-actions template-editor-actions">
-          <Button variant="secondary" type="button" onClick={onClose}>
+        <footer className="template-editor-drawer-footer">
+          <Button variant="secondary" type="button" disabled={busy} onClick={onClose}>
             Cancel
           </Button>
           <div>
-            <Button variant="secondary" type="button" onClick={onPreview}>
+            <Button variant="secondary" type="button" disabled={busy} onClick={onPreview}>
               Preview email
             </Button>
             <Button type="submit" disabled={busy}>
               {busy ? "Saving..." : "Save template"}
             </Button>
           </div>
-        </div>
+        </footer>
       </form>
-    </ModalShell>
+    </SideDrawer>
   );
 }
-
 export function EditorEmailPreview({ editor, open, onClose }) {
+  if (!open) return null;
+
   return (
-    <ModalShell
-      open={open}
+    <SideDrawer
+      className="email-preview-drawer editor-email-preview-drawer"
+      backdropClassName="email-preview-drawer-backdrop"
+      labelledBy="editor-email-preview-title"
+      describedBy="editor-email-preview-description"
       onClose={onClose}
-      nested
-      className="editor-email-preview-modal"
-      ariaLabelledBy="editor-email-preview-title"
     >
-      <header className="modal-header">
-        <div>
-          <span className="modal-eyebrow">Live sample</span>
-          <h2 id="editor-email-preview-title">Email preview</h2>
-          <p>Rendered with sample recipient data. Your unsaved template changes are shown here.</p>
-        </div>
-        <Button className="modal-close-button" type="button" onClick={onClose} aria-label="Close email preview">
-          <span aria-hidden="true">&times;</span>
-        </Button>
-      </header>
-      <div className="email-preview-recipient">
-        <span>
-          <small>To</small>
-          <strong>{SAMPLE_VALUES.user_name}</strong>
-          <em>{SAMPLE_VALUES.login_email}</em>
-        </span>
-        <span>
-          <small>Role and region</small>
-          <strong>{SAMPLE_VALUES.role}</strong>
-          <em>{SAMPLE_VALUES.region}</em>
-        </span>
-      </div>
-      <article className="email-preview-canvas">
-        <header>
-          <strong className="email-preview-section-label">Subject</strong>
-          <h3>{renderSample(editor?.subject) || "No subject entered"}</h3>
+      <div className="email-preview-drawer-layout">
+        <header className="email-preview-drawer-header">
+          <div>
+            <span className="modal-eyebrow">Live sample</span>
+            <h2 id="editor-email-preview-title">Email preview</h2>
+            <p id="editor-email-preview-description">
+              Rendered with sample recipient data. Your unsaved template changes are shown here.
+            </p>
+          </div>
+          <CloseButton
+            className="modal-close-button"
+            type="button"
+            onClick={onClose}
+            aria-label="Close email preview"
+          />
         </header>
-        <section className="email-preview-content">
-          <strong className="email-preview-section-label">Email content</strong>
-          <pre>{renderSample(editor?.bodyText) || "No plain-text message entered."}</pre>
-        </section>
-      </article>
-      <p className="preview-safety-note">
-        This is a visual preview only. No activation link is created and no email is sent.
-      </p>
-      <div className="modal-form-actions">
-        <Button type="button" onClick={onClose}>
-          Back to editor
-        </Button>
+        <div className="email-preview-drawer-body">
+          <div className="email-preview-recipient">
+            <span>
+              <small>To</small>
+              <strong>{SAMPLE_VALUES.user_name}</strong>
+              <em>{SAMPLE_VALUES.login_email}</em>
+            </span>
+            <span>
+              <small>Role and region</small>
+              <strong>{SAMPLE_VALUES.role}</strong>
+              <em>{SAMPLE_VALUES.region}</em>
+            </span>
+          </div>
+          <article className="email-preview-canvas">
+            <header>
+              <strong className="email-preview-section-label">Subject</strong>
+              <h3>{renderSample(editor?.subject) || "No subject entered"}</h3>
+            </header>
+            <section className="email-preview-content">
+              <strong className="email-preview-section-label">Email content</strong>
+              <pre>{renderSample(editor?.bodyText) || "No plain-text message entered."}</pre>
+            </section>
+          </article>
+          <p className="preview-safety-note">
+            This is a visual preview only. No activation link is created and no email is sent.
+          </p>
+        </div>
+        <footer className="email-preview-drawer-footer">
+          <Button type="button" onClick={onClose}>
+            Back to editor
+          </Button>
+        </footer>
       </div>
-    </ModalShell>
+    </SideDrawer>
   );
 }

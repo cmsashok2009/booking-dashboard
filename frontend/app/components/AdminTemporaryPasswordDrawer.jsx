@@ -7,13 +7,14 @@ import SideDrawer from "./ui/SideDrawer";
 import PasswordFields, { isStrongPassword } from "./PasswordFields";
 import { request } from "../utils/api";
 
-export default function AdminTemporaryPasswordDrawer({ user, onClose }) {
+export default function AdminTemporaryPasswordDrawer({ user, onClose, onUserUpdated }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [activatedOnSave, setActivatedOnSave] = useState(false);
 
   useEffect(() => {
     setPassword("");
@@ -22,9 +23,12 @@ export default function AdminTemporaryPasswordDrawer({ user, onClose }) {
     setSaving(false);
     setError("");
     setSaved(false);
+    setActivatedOnSave(false);
   }, [user?.id]);
 
   if (!user) return null;
+  const activating = user.status === "pending_invitation";
+  const eligible = user.status === "active" || activating;
 
   async function submit(event) {
     event.preventDefault();
@@ -39,10 +43,12 @@ export default function AdminTemporaryPasswordDrawer({ user, onClose }) {
     }
     setSaving(true);
     try {
-      await request(`/api/admin/users/${encodeURIComponent(user.id)}/temporary-password`, {
+      const result = await request(`/api/admin/users/${encodeURIComponent(user.id)}/temporary-password`, {
         method: "POST",
-        body: JSON.stringify({ password, confirmPassword })
+        body: JSON.stringify({ password, confirmPassword, activatePending: activating })
       });
+      setActivatedOnSave(activating);
+      if (result.user) onUserUpdated?.(result.user);
       setPassword("");
       setConfirmPassword("");
       setSaved(true);
@@ -64,16 +70,24 @@ export default function AdminTemporaryPasswordDrawer({ user, onClose }) {
       <header className="modal-header admin-temporary-password-header">
         <div>
           <span className="modal-eyebrow">Account security</span>
-          <h2 id="admin-temporary-password-title">Set temporary password</h2>
-          <p id="admin-temporary-password-description">Create a temporary sign-in password for this user.</p>
+          <h2 id="admin-temporary-password-title">{activating ? "Activate account" : "Set temporary password"}</h2>
+          <p id="admin-temporary-password-description">
+            {activating
+              ? "Activate this user immediately with a temporary sign-in password."
+              : "Create a temporary sign-in password for this user."}
+          </p>
         </div>
         <CloseButton className="modal-close-button" onClick={onClose} disabled={saving} autoFocus />
       </header>
       {saved ? (
         <div className="admin-temporary-password-complete">
           <div role="status">
-            <h3>Temporary password updated</h3>
-            <p>Existing sessions and password reset links have been revoked. Share the password through an approved secure channel.</p>
+            <h3>{activatedOnSave ? "Account activated" : "Temporary password updated"}</h3>
+            <p>
+              {activatedOnSave
+                ? "The account is active and outstanding activation links have been revoked. Share the temporary password through an approved secure channel."
+                : "Existing sessions and password reset links have been revoked. Share the password through an approved secure channel."}
+            </p>
           </div>
           <footer className="admin-temporary-password-footer">
             <Button type="button" onClick={onClose}>Done</Button>
@@ -97,12 +111,19 @@ export default function AdminTemporaryPasswordDrawer({ user, onClose }) {
               prefix="admin-temporary-password"
             />
             <p className="field-hint">The password is never displayed again or included in logs.</p>
-            {user.status !== "active" ? <div className="activation-error" role="alert">Activate this user before setting a temporary password.</div> : null}
+            {activating ? (
+              <div className="activation-warning" role="note">
+                This immediately activates the account and revokes any outstanding email activation link. The user must change this password after signing in.
+              </div>
+            ) : null}
+            {!eligible ? <div className="activation-error" role="alert">Only active or pending-invitation users are eligible.</div> : null}
             {error ? <div className="activation-error" role="alert">{error}</div> : null}
           </div>
           <footer className="admin-temporary-password-footer">
             <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" busy={saving} busyLabel="Setting password..." disabled={user.status !== "active"}>Set temporary password</Button>
+            <Button type="submit" busy={saving} busyLabel={activating ? "Activating account..." : "Setting password..."} disabled={!eligible}>
+              {activating ? "Activate and set password" : "Set temporary password"}
+            </Button>
           </footer>
         </form>
       )}

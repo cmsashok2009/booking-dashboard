@@ -91,7 +91,7 @@ describe("template quick editor", () => {
       payload: { errors: [{ field: "subject", message: "Bad subject" }] }
     });
     render(<TemplateQuickEditor {...failed} />);
-    await userEvent.type(screen.getByLabelText(/html message/i), "<p>Hello</p>");
+    await userEvent.type(screen.getByLabelText(/template name/i), " changed");
     await userEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.getByText("Bad subject")).toBeInTheDocument();
     expect(failed.setNotice).toHaveBeenCalledWith({ type: "error", message: "Invalid" });

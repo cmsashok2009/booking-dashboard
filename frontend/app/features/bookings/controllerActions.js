@@ -172,25 +172,34 @@ export function createBookingActions(context) {
       setNotice({ message: error.payload?.error || error.message, type: "error" });
     }
   }
-  async function addLookupOption(label) {
-    if (!label) {
+  async function addLookupOption(input) {
+    const value = typeof input === "string" ? input : input?.label || input?.name || input?.code;
+    if (!value) {
       setAddOptionError("Option value is required.");
       return;
     }
     try {
-      const result = await request(`/api/admin/lookups/${selectedAreaField}/options`, {
-        method: "POST",
-        body: JSON.stringify({ label, updatedBy: user.id })
-      });
+      const endpoint = selectedAreaField === "regions"
+        ? "/api/admin/regions"
+        : selectedAreaField === "dealerCodes"
+          ? "/api/admin/dealer-codes"
+          : `/api/admin/lookups/${selectedAreaField}/options`;
+      const payload = selectedAreaField === "regions" ? { name: value }
+        : selectedAreaField === "dealerCodes" ? { code: value, region: input.region }
+          : { label: value };
+      const result = await request(endpoint, { method: "POST", body: JSON.stringify({ ...payload, updatedBy: user.id }) });
       setBootstrap((current) => ({
         ...current,
-        lookups: result.lookups,
-        lookupOptions: result.lookupOptions
+        ...result,
+        lookups: result.lookups || current.lookups,
+        lookupOptions: result.lookupOptions || current.lookupOptions
       }));
       closeAddOptionModal();
-      setNotice({ message: `${lookupFieldLabels[selectedAreaField]} option added.`, type: "success" });
+      setNotice({ message: `${lookupFieldLabels[selectedAreaField]} added.`, type: "success" });
     } catch (error) {
-      setNotice({ message: error.payload?.error || error.message, type: "error" });
+      const message = error.payload?.error || error.message;
+      setAddOptionError(message);
+      setNotice({ message, type: "error" });
     }
   }
 

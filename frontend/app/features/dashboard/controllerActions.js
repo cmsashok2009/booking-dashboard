@@ -116,9 +116,15 @@ export function createShellActions(context) {
   async function confirmAbortWorkflow() {
     setAbortingWorkflow(true);
     try {
-      await request(`/api/admin/onboarding/${encodeURIComponent(abortWorkflow.id)}/cancel`, { method: "POST" });
+      const result = await request(`/api/admin/onboarding/${encodeURIComponent(abortWorkflow.id)}/cancel`, { method: "POST" });
       setAbortWorkflow(null);
-      setNotice({ type: "success", message: "Onboarding aborted. Created users and audit history were retained." });
+      const removed = result.removedUserCount || 0;
+      setNotice({
+        type: "success",
+        message: removed
+          ? `Onboarding aborted. ${removed} pending ${removed === 1 ? "user was" : "users were"} removed; audit history was retained.`
+          : "Onboarding aborted. No pending users were removed; audit history was retained."
+      });
       try {
         await loadBootstrap();
       } catch {

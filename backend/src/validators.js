@@ -37,7 +37,6 @@ export function normalizeRoleDefinitions(roles = []) {
     return typeof current === "object" ? { ...definition, ...current, name: definition.name, code: definition.code } : { ...definition };
   });
 }
-
 export function activeRoleNames(db) {
   return normalizeRoleDefinitions(db.roles).filter((role) => role.isActive).map((role) => role.name);
 }
@@ -218,6 +217,24 @@ export function seedData() {
   };
   ensureDealerAssignments(data);
   return data;
+}
+
+export function reconcileSeededDemoUsers(data, seededUsers, includeDemoUsers) {
+  const demoUsers = seededUsers.filter((user) =>
+    ["All India I", "All India II"].includes(user.role) || /^u-(am|rm)-/.test(user.id)
+  );
+  const originalCount = data.users.length;
+
+  if (includeDemoUsers) {
+    for (const demoUser of demoUsers) {
+      if (!data.users.some((user) => user.email.toLowerCase() === demoUser.email.toLowerCase())) data.users.push(demoUser);
+    }
+  } else {
+    const demoIdentities = new Set(demoUsers.map((user) => `${user.id}:${user.email.toLowerCase()}`));
+    data.users = data.users.filter((user) => !demoIdentities.has(`${user.id}:${String(user.email).toLowerCase()}`));
+  }
+
+  return data.users.length !== originalCount;
 }
 
 export function parseCsv(input) {
@@ -546,6 +563,12 @@ export function validateSingleUser(row, db, rowNumber = 2, uploadEmails = new Se
   if (["Area Manager", "Regional Manager"].includes(role) && !region) {
     errors.push(rowError(rowNumber, "Region", "Region is required for this role"));
   }
+  const knownRegions = (db.regions || []).length
+    ? db.regions.filter((item) => item.status === "active").map((item) => item.name)
+    : db.bookings.map((booking) => booking.region).filter(Boolean);
+  if (["Area Manager", "Regional Manager"].includes(role) && region && !knownRegions.some((name) => name.toLowerCase() === region.toLowerCase())) {
+    errors.push(rowError(rowNumber, "Region", "Region must be an active value from Reference Data", region));
+  }
   if (selectedRole?.managerRoleCode && !managerEmail) {
     errors.push(rowError(rowNumber, "Reporting Manager Email", `Reporting Manager Email is required for ${selectedRole.name}`));
   }
@@ -562,8 +585,22 @@ export function validateSingleUser(row, db, rowNumber = 2, uploadEmails = new Se
       errors.push(rowError(rowNumber, "Reporting Manager Email", `${selectedRole?.name || role} does not require a reporting manager`, managerEmail));
     }
   }
-  if (dealerCode && !db.bookings.some((booking) => booking.dealerCode.toLowerCase() === dealerCode.toLowerCase())) {
+  const selectedDealer = (db.dealerCodes || []).find(
+    (item) => item.status === "active" && item.code.toLowerCase() === dealerCode.toLowerCase()
+  );
+  const knownDealerCode = (db.dealerCodes || []).length
+    ? Boolean(selectedDealer)
+    : db.bookings.some((booking) => booking.dealerCode.toLowerCase() === dealerCode.toLowerCase());
+  if (dealerCode && !knownDealerCode) {
     errors.push(rowError(rowNumber, "Dealer Code", "Dealer Code is not known from booking data", dealerCode));
+  }
+  if (dealerCode && selectedDealer && selectedDealer.region.toLowerCase() !== region.toLowerCase()) {
+    errors.push(rowError(
+      rowNumber,
+      "Region",
+      `Region must be ${selectedDealer.region} for Dealer Code ${selectedDealer.code}`,
+      region
+    ));
   }
   return { valid: errors.length === 0, errors };
 }

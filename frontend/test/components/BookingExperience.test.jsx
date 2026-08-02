@@ -75,7 +75,8 @@ describe("booking workspace", () => {
     );
     expect(screen.queryByRole("tab", { name: "Excel source view" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
-    expect(screen.getByRole("tabpanel")).toHaveAttribute("id", "booking-workflow-panel");
+    expect(screen.getByRole("tabpanel")).toHaveAttribute("id", "booking-management-panel");
+    expect(screen.getByRole("tab", { name: "Workflow view" })).toHaveAttribute("aria-selected", "true");
   });
 });
 

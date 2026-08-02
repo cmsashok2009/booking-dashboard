@@ -61,7 +61,9 @@ export function createUserActions(context) {
       setBulkUserModalOpen(true);
       setUserPage(1);
       setNotice({
-        message: "User created as pending invitation. Choose an activation template to continue.",
+        message: result.resumed
+          ? "Pending onboarding resumed. Continue from the saved invitation step."
+          : "User created as pending invitation. Choose an activation template to continue.",
         type: "success"
       });
     } catch (error) {

@@ -69,6 +69,21 @@ describe("dashboard shell view routing", () => {
     });
   }
 
+
+  it("orders Email Management tabs from setup to delivery", () => {
+    render(
+      <DashboardShell
+        state={{ ...baseState, activeView: "email-settings" }}
+        actions={actions}
+        models={models}
+      />
+    );
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["Email Setup", "Email Operations", "Email Configuration"]);
+    expect(screen.getByRole("tab", { name: "Email Setup" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Email Configuration" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.queryByRole("tab", { name: "Delivery Logs" })).not.toBeInTheDocument();
+  });
   it("uses manager dashboard copy and hides admin insights/navigation", () => {
     render(
       <DashboardShell
@@ -84,7 +99,7 @@ describe("dashboard shell view routing", () => {
     );
     expect(screen.getByText("Reconciliation manager")).toBeInTheDocument();
     expect(screen.queryByText("Chart Regions")).not.toBeInTheDocument();
-    expect(screen.queryByText("Access Management")).not.toBeInTheDocument();
+    expect(screen.queryByText("User Management")).not.toBeInTheDocument();
   });
 });
 

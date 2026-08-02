@@ -137,8 +137,8 @@ test("Admin critical views and primary actions are accessible", async ({ page },
   await expectNoSeriousAxe(page);
   await page.getByRole("button", { name: "Close add option" }).click();
 
-  await page.getByRole("button", { name: "Access Management" }).click();
-  await expect(page.getByRole("heading", { name: "Users", level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: "User Management" }).click();
+  await expect(page.getByRole("heading", { name: "User Management", level: 1 })).toBeVisible();
   await page.getByRole("button", { name: "Add Single User" }).click();
   await expect(page.getByRole("dialog", { name: "Add Single User" })).toBeVisible();
   await expectNoSeriousAxe(page);
@@ -147,26 +147,26 @@ test("Admin critical views and primary actions are accessible", async ({ page },
   await expect(page.getByRole("dialog", { name: "Bulk user onboarding" })).toBeVisible();
   await page.getByRole("button", { name: "Close user onboarding" }).click();
 
-  await page.getByRole("button", { name: "Message Templates" }).click();
-  await expect(page.getByRole("heading", { name: "Email Templates", level: 1 })).toBeVisible();
-  await page.getByRole("button", { name: "Preview" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expectNoSeriousAxe(page);
-  await page.keyboard.press("Escape");
-
-  await page.getByRole("button", { name: "Delivery Logs" }).click();
-  await expect(page.getByRole("heading", { name: "Email Delivery", level: 1 })).toBeVisible();
-  await page.getByText("Activation campaign").click();
-  await expect(page.getByRole("cell", { name: "manager@example.com" })).toBeVisible();
-  await expectNoSeriousAxe(page);
-
-  await page.getByRole("button", { name: "Email Configuration" }).click();
-  await expect(page.getByRole("heading", { name: "Email Settings", level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: "Email Management" }).click();
+  await expect(page.getByRole("heading", { name: "Email Management", level: 1 })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Email Configuration" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("sender@example.com")).toBeVisible();
   await page.getByRole("button", { name: "Disconnect", exact: true }).click();
   await expect(
     page.getByText("Stop Gmail delivery and remove the stored authorization?", { exact: true })
   ).toBeVisible();
   await page.getByRole("button", { name: "Keep connected" }).click();
+  await expectNoSeriousAxe(page);
+
+  await page.getByRole("tab", { name: "Email Operations" }).click();
+  await page.getByRole("tab", { name: "Message Templates" }).click();
+  await page.getByRole("button", { name: "Preview" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expectNoSeriousAxe(page);
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("tab", { name: "Delivery Logs" }).click();
+  await page.getByText("Activation campaign").click();
+  await expect(page.getByRole("cell", { name: "manager@example.com" })).toBeVisible();
   await expectNoSeriousAxe(page);
 });

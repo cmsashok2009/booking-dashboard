@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Pagination from "./Pagination";
-import { EmptyState, PageHeader, Panel, Select, StatusBadge, Table, TextInput } from "./ui";
+import { EmptyState, PageHeader, Select, StatusBadge, Table, TextInput } from "./ui";
 const DELIVERY_PAGE_SIZE = 5;
 
 function campaignVariant(campaign) {
@@ -72,7 +72,7 @@ export default function EmailDeliveryView({ campaigns = [] }) {
           <strong>{totalFailed}</strong>
         </div>
       </div>
-      <Panel className="panel delivery-log-panel">
+      <section className="email-content-section delivery-log-panel">
         <PageHeader
           title="Invitation Delivery Log"
           subtitle="Campaign and recipient outcomes from the configured email provider."
@@ -182,7 +182,7 @@ export default function EmailDeliveryView({ campaigns = [] }) {
             description="Campaign delivery results will appear after an Admin sends activation emails."
           />
         )}
-      </Panel>
+      </section>
     </div>
   );
 }

@@ -64,12 +64,30 @@ describe("Area Fields workspace", () => {
     };
   }
 
+  it("shows built-in roles first as read-only access data", async () => {
+    const roles = [
+      { id: "AM", code: "AM", label: "Area Manager", status: "active" },
+      { id: "RM", code: "RM", label: "Regional Manager", status: "active" },
+      { id: "ALL_INDIA_I", code: "ALL_INDIA_I", label: "All India I", status: "active" },
+      { id: "ALL_INDIA_II", code: "ALL_INDIA_II", label: "All India II", status: "active" },
+      { id: "ALL_INDIA", code: "ALL_INDIA", label: "All India", status: "active" },
+      { id: "ADMIN", code: "ADMIN", label: "Admin", status: "active" }
+    ];
+    render(<AreaFieldsWorkspace {...props({ selectedField: "roles", options: roles })} />);
+    expect(screen.getByRole("tab", { name: "Roles" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getAllByRole("tab")[2]).toHaveAccessibleName("Roles");
+    expect(screen.getByText("Area Manager")).toBeInTheDocument();
+    expect(screen.getByText("Application administration")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Deactivate" })).not.toBeInTheDocument();
+  });
   it("changes field, filters, clears, opens add, edits, and deactivates", async () => {
     const values = props({ search: "pri" });
     render(<AreaFieldsWorkspace {...values} />);
-    await userEvent.selectOptions(screen.getByLabelText("Dropdown field"), "wholesalesFeedback");
-    await userEvent.type(screen.getByLabelText("Search dropdown options"), "x");
-    await userEvent.selectOptions(screen.getByLabelText("Filter options by status"), "active");
+    await userEvent.click(screen.getByRole("tab", { name: "Wholesales Feedback" }));
+    await userEvent.type(screen.getByLabelText("Search Booking Category"), "x");
+    await userEvent.selectOptions(screen.getByLabelText("Filter values by status"), "active");
     await userEvent.click(screen.getByRole("button", { name: "Clear" }));
     await userEvent.click(screen.getByRole("button", { name: "Add option" }));
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));

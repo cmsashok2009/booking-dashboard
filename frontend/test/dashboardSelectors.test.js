@@ -36,7 +36,7 @@ test("dashboard insights preserve admin and assigned-user views", () => {
   );
 });
 
-test("user selector excludes admins and combines search, filters, and sorting", () => {
+test("user selector includes admins and combines search, filters, and sorting", () => {
   const users = [
     { name: "Zed", role: "Dealer", region: "North", status: "active" },
     { name: "Amy", role: "Dealer", region: "South", status: "active" },
@@ -54,4 +54,14 @@ test("user selector excludes admins and combines search, filters, and sorting", 
     result.map(({ name }) => name),
     ["Amy", "Zed"]
   );
+
+  const admins = filterAndSortUsers(users, {
+    search: "root",
+    role: "Admin",
+    region: "",
+    status: "active",
+    sortKey: "name",
+    sortDir: "asc"
+  });
+  assert.deepEqual(admins.map(({ name }) => name), ["Root"]);
 });

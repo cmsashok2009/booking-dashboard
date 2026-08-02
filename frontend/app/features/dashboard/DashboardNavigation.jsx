@@ -3,11 +3,9 @@
 import NavigationItem from "../../components/ui/NavigationItem";
 
 const ADMIN_ITEMS = [
-  ["area-fields", "Workflow Options"],
-  ["users", "Access Management"],
-  ["email-templates", "Message Templates"],
-  ["email-delivery", "Delivery Logs"],
-  ["email-settings", "Email Configuration"]
+  ["users", "User Management"],
+  ["area-fields", "Business Settings"],
+  ["email-settings", "Email Management"]
 ];
 
 export default function DashboardNavigation({ activeView, canAdmin, onNavigate }) {
@@ -16,7 +14,7 @@ export default function DashboardNavigation({ activeView, canAdmin, onNavigate }
   return (
     <nav className="nav" aria-label="Primary">
       {items.map(([view, label]) => (
-        <NavigationItem active={activeView === view} onClick={() => onNavigate(view)} key={view}>
+        <NavigationItem active={activeView === view || (view === "email-settings" && ["email-templates", "email-delivery"].includes(activeView))} onClick={() => onNavigate(view)} key={view}>
           {label}
         </NavigationItem>
       ))}

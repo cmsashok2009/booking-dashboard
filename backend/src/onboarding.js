@@ -217,12 +217,29 @@ export function cancelOnboardingWorkflow(db, workflowId, actorId = "u-admin") {
   if (workflow.status === "completed") return { error: "A completed invitation campaign cannot be closed", status: 409 };
   if (workflow.status === "cancelled") return workflow;
   const now = new Date().toISOString();
+  const removableUserIds = new Set(
+    workflow.campaignId
+      ? []
+      : workflow.createdUserIds.filter((userId) =>
+          db.users.some((user) => user.id === userId && user.status === "pending_invitation")
+        )
+  );
+  db.users = db.users.filter((user) => !removableUserIds.has(user.id));
+  db.activationTokens = db.activationTokens.filter((token) => !removableUserIds.has(token.userId));
   workflow.status = "cancelled";
   workflow.currentStep = "cancelled";
   workflow.cancelledAt = now;
   workflow.updatedAt = now;
   workflow.version += 1;
-  db.auditLogs.unshift({ id: id("audit"), action: "onboarding_batch_closed", entityId: workflow.id, userId: actorId, createdAt: now });
+  workflow.removedUserCount = removableUserIds.size;
+  db.auditLogs.unshift({
+    id: id("audit"),
+    action: "onboarding_batch_closed",
+    entityId: workflow.id,
+    userId: actorId,
+    outcome: { removedPendingUsers: removableUserIds.size },
+    createdAt: now
+  });
   return workflow;
 }
 
@@ -336,7 +353,15 @@ export async function sendInvitationCampaign(db, workflowId, actorId = "u-admin"
   try {
     await verifyEmailTransport(db);
   } catch (error) {
-    return { error: `Email delivery is not ready: ${error.message}`, status: 503 };
+    const code = error.code || "EMAIL_DELIVERY_UNAVAILABLE";
+    const recovery = code === "EMAIL_NOT_CONNECTED"
+      ? "Connect a Google sender in Email Configuration, then return here and try again."
+      : "Review Email Configuration, then return here and try again.";
+    return {
+      error: `Activation emails were not sent. The users and onboarding progress are saved. ${recovery}`,
+      code,
+      status: 503
+    };
   }
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();

@@ -18,12 +18,16 @@ export function OnboardingInitialSteps({
   runAction,
   closeBatch
 }) {
+  const errorTitle = /^Activation emails were not sent\./i.test(error)
+    ? "Email delivery is not ready"
+    : "Unable to continue";
+
   return (
     <>
       {" "}
       {error ? (
         <div className="onboarding-alert error" role="alert">
-          <strong>Unable to continue</strong>
+          <strong>{errorTitle}</strong>
           <p>{error}</p>
         </div>
       ) : null}

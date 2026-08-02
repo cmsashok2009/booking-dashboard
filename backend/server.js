@@ -13,6 +13,7 @@ import {
   parseCsv,
   activeRoleNames,
   normalizeRoleDefinitions,
+  reconcileSeededDemoUsers,
   seedData,
   upsertBookings,
   upsertUsers,
@@ -20,6 +21,7 @@ import {
   validateUserUpdate
 } from "./src/validators.js";
 import { isBookingAssignedToAreaManager, scopeBookingsForUser } from "./src/access.js";
+import { createDealerCode, createRegion, ensureAccessMasterData, updateDealerCode, updateRegion } from "./src/access-master-data.js";
 import { ensureDealerAssignments } from "./src/dealer-assignments.js";
 import {
   changedNotificationFields,
@@ -126,18 +128,14 @@ async function ensureDb() {
   if (!Array.isArray(data.roles) || data.roles.some((role) => typeof role === "string")) migrated = true;
   data.roles = normalizeRoleDefinitions(data.roles);
   const seededUsers = seedData().users;
-  for (const seededUser of seededUsers.filter((user) => ["All India I", "All India II"].includes(user.role) || /^u-(am|rm)-/.test(user.id))) {
-    if (!data.users.some((user) => user.email.toLowerCase() === seededUser.email.toLowerCase())) {
-      data.users.push(seededUser);
-      migrated = true;
-    }
-  }
+  if (reconcileSeededDemoUsers(data, seededUsers, process.env.NODE_ENV !== "production")) migrated = true;
   const regionalManager = data.users.find((user) => user.id === "u-rm-west");
   if (regionalManager?.reportingManagerEmail === "all.india@example.com") {
     regionalManager.reportingManagerEmail = "all.india1@example.com";
     migrated = true;
   }
   if (ensureDealerAssignments(data)) migrated = true;
+  if (ensureAccessMasterData(data)) migrated = true;
   syncActiveLookups(data);
   applyRetentionPolicy(data);
   if (migrated) await saveDb(data);
@@ -410,6 +408,43 @@ async function handleApi(req, res) {
     return sendJson(res, 200, { user: safeUser });
   }
 
+  if (req.method === "POST" && pathname === "/api/admin/regions") {
+    const admin = authenticatedAdmin(req, db);
+    if (!admin) return sendJson(res, 403, { error: "Admin access is required", code: "ADMIN_REQUIRED" });
+    const result = createRegion(db, await readBody(req), admin.id);
+    if (!result.error) await saveDb(db);
+    return sendJson(res, result.error ? result.status : 201, result.error ? result : { ...result, regions: db.regions.filter((item) => item.status === "active").map((item) => item.name), regionOptions: db.regions });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/dealer-codes") {
+    const admin = authenticatedAdmin(req, db);
+    if (!admin) return sendJson(res, 403, { error: "Admin access is required", code: "ADMIN_REQUIRED" });
+    const result = createDealerCode(db, await readBody(req), admin.id);
+    if (!result.error) await saveDb(db);
+    return sendJson(res, result.error ? result.status : 201, result.error ? result : { ...result, dealerCodes: db.dealerCodes });
+  }
+
+  const regionMatch = pathname.match(/^\/api\/admin\/regions\/([^\/]+)$/);
+  if (req.method === "PATCH" && regionMatch) {
+    const admin = authenticatedAdmin(req, db);
+    if (!admin) return sendJson(res, 403, { error: "Admin access is required", code: "ADMIN_REQUIRED" });
+    const result = updateRegion(db, decodeURIComponent(regionMatch[1]), await readBody(req), admin.id);
+    if (!result.error) await saveDb(db);
+    return sendJson(res, result.error ? result.status : 200, result.error ? result : {
+      ...result,
+      regions: db.regions.filter((item) => item.status === "active").map((item) => item.name),
+      regionOptions: db.regions
+    });
+  }
+
+  const dealerCodeMatch = pathname.match(/^\/api\/admin\/dealer-codes\/([^\/]+)$/);
+  if (req.method === "PATCH" && dealerCodeMatch) {
+    const admin = authenticatedAdmin(req, db);
+    if (!admin) return sendJson(res, 403, { error: "Admin access is required", code: "ADMIN_REQUIRED" });
+    const result = updateDealerCode(db, decodeURIComponent(dealerCodeMatch[1]), await readBody(req), admin.id);
+    if (!result.error) await saveDb(db);
+    return sendJson(res, result.error ? result.status : 200, result.error ? result : { ...result, dealerCodes: db.dealerCodes });
+  }
   if (req.method === "GET" && pathname === "/api/admin/email-provider/google/callback") {
     const result = await completeGoogleAuthorization(db, {
       code: url.searchParams.get("code") || "",
@@ -438,9 +473,11 @@ async function handleApi(req, res) {
       emailProvider: isAdmin ? googleEmailStatus(db) : null,
       users: (isAdmin ? db.users : [viewer]).map(({ passwordHash, ...user }) => user),
       dealerAssignments: isAdmin ? db.dealerAssignments : [],
+      dealerCodes: isAdmin ? db.dealerCodes : [],
+      regionOptions: isAdmin ? db.regions : [],
       lookups: activeLookups(db.lookupOptions),
       lookupOptions: db.lookupOptions,
-      regions: [...new Set(db.bookings.map((item) => item.region).filter(Boolean))]
+      regions: db.regions.filter((item) => item.status === "active").map((item) => item.name)
     });
   }
 
@@ -817,8 +854,11 @@ async function handleApi(req, res) {
       if (action === "send") result = await sendInvitationCampaign(db, workflowId, admin.id, process.env.APP_URL || body.appUrl || "http://localhost:3000");
       if (action === "cancel") result = cancelOnboardingWorkflow(db, workflowId, admin.id);
       if (!result) return sendJson(res, 405, { error: "Unsupported onboarding action" });
-      if (!result.error) await saveDb(db);
-      return sendJson(res, result.error ? result.status || 422 : 200, action === "send" ? publicCampaign(result) : result);
+      if (result.error) {
+        return sendJson(res, result.status || 422, { error: result.error, code: result.code || "ONBOARDING_ACTION_FAILED" });
+      }
+      await saveDb(db);
+      return sendJson(res, 200, action === "send" ? publicCampaign(result) : result);
     }
   }
 
@@ -885,9 +925,19 @@ async function handleApi(req, res) {
     const userId = decodeURIComponent(pathname.split("/")[4]);
     const body = await readBody(req);
     if (body.password !== body.confirmPassword) return sendJson(res, 422, { error: "Passwords do not match." });
-    const result = adminSetTemporaryPassword(db, userId, admin.id, String(body.password || ""));
+    const result = adminSetTemporaryPassword(db, userId, admin.id, String(body.password || ""), {
+      activatePending: body.activatePending === true
+    });
     if (result.valid) await saveDb(db);
-    return sendJson(res, result.valid ? 200 : result.status || 422, result.valid ? { updated: true, mustChangePassword: true } : { error: result.error, errors: result.errors || [] });
+    const updatedUser = db.users.find((item) => item.id === userId);
+    const { passwordHash: _passwordHash, ...safeUser } = updatedUser || {};
+    return sendJson(
+      res,
+      result.valid ? 200 : result.status || 422,
+      result.valid
+        ? { updated: true, activated: result.activated, mustChangePassword: true, user: safeUser }
+        : { error: result.error, errors: result.errors || [] }
+    );
   }
   if (req.method === "PATCH" && pathname.match(/^\/api\/admin\/users\/[^/]+$/)) {
     const userId = decodeURIComponent(pathname.split("/")[4]);

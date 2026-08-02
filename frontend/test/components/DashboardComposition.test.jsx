@@ -68,11 +68,11 @@ describe("dashboard composition", () => {
   it("gates admin navigation and delegates route selection", async () => {
     const navigate = vi.fn();
     const { rerender } = render(<DashboardNavigation activeView="dashboard" canAdmin={false} onNavigate={navigate} />);
-    expect(screen.queryByText("Access Management")).not.toBeInTheDocument();
+    expect(screen.queryByText("User Management")).not.toBeInTheDocument();
     await userEvent.click(screen.getByText("Booking Management"));
     expect(navigate).toHaveBeenCalledWith("bookings");
     rerender(<DashboardNavigation activeView="users" canAdmin onNavigate={navigate} />);
-    expect(screen.getByText("Access Management")).toBeInTheDocument();
-    expect(screen.getByText("Access Management").closest("button")).toHaveClass("active");
+    expect(screen.getByText("User Management")).toBeInTheDocument();
+    expect(screen.getByText("User Management").closest("button")).toHaveClass("active");
   });
 });

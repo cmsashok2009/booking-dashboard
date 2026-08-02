@@ -16,6 +16,7 @@ import { AreaFieldsWorkspace } from "../area-fields";
 import { BookingWorkspace } from "../bookings";
 import { UsersWorkspace } from "../users";
 import DashboardMetrics from "./DashboardMetrics";
+import EmailManagementTabs, { EMAIL_MANAGEMENT_VIEWS } from "./EmailManagementTabs";
 import DashboardNavigation from "./DashboardNavigation";
 
 function PageTopbar({ title, subtitle, state, actions }) {
@@ -110,8 +111,8 @@ export default function DashboardShell({ state, actions, models, overlays }) {
               <PageTopbar
                 state={state}
                 actions={shellActions}
-                title="Area Fields"
-                subtitle="Admin-managed content used by Area Manager booking updates."
+                title="Business Settings"
+                subtitle="Manage regions, dealer codes, and booking workflow options."
               />
               <AreaFieldsWorkspace {...models.areaFields} />
             </>
@@ -121,49 +122,37 @@ export default function DashboardShell({ state, actions, models, overlays }) {
               <PageTopbar
                 state={state}
                 actions={shellActions}
-                title="Users"
+                title="User Management"
                 subtitle="Manage dashboard access and user assignments."
               />
               <UsersWorkspace {...models.users} />
             </>
           ) : null}
-          {activeView === "email-templates" ? (
+          {EMAIL_MANAGEMENT_VIEWS.includes(activeView) ? (
             <>
               <PageTopbar
                 state={state}
                 actions={shellActions}
-                title="Email Templates"
-                subtitle="Manage reusable messages for activation and future reminders."
+                title="Email Management"
+                subtitle="Manage message templates, delivery activity, and sender configuration."
               />
-              <FeatureErrorBoundary name="Email templates" resetKey={activeView}>
-                <EmailTemplatesView {...models.email.templates} />
-              </FeatureErrorBoundary>
-            </>
-          ) : null}
-          {activeView === "email-delivery" ? (
-            <>
-              <PageTopbar
-                state={state}
-                actions={shellActions}
-                title="Email Delivery"
-                subtitle="Review invitation campaigns and recipient delivery outcomes."
-              />
-              <FeatureErrorBoundary name="Email delivery" resetKey={activeView}>
-                <EmailDeliveryView campaigns={models.email.campaigns} />
-              </FeatureErrorBoundary>
-            </>
-          ) : null}
-          {activeView === "email-settings" ? (
-            <>
-              <PageTopbar
-                state={state}
-                actions={shellActions}
-                title="Email Settings"
-                subtitle="Connect and verify the organization account used for activation delivery."
-              />
-              <FeatureErrorBoundary name="Email settings" resetKey={activeView}>
-                <EmailSettingsView {...models.email.settings} />
-              </FeatureErrorBoundary>
+              <EmailManagementTabs activeView={activeView} onNavigate={actions.navigate}>
+                {activeView === "email-templates" ? (
+                  <FeatureErrorBoundary name="Email templates" resetKey={activeView}>
+                    <EmailTemplatesView {...models.email.templates} />
+                  </FeatureErrorBoundary>
+                ) : null}
+                {activeView === "email-delivery" ? (
+                  <FeatureErrorBoundary name="Email delivery" resetKey={activeView}>
+                    <EmailDeliveryView campaigns={models.email.campaigns} />
+                  </FeatureErrorBoundary>
+                ) : null}
+                {activeView === "email-settings" ? (
+                  <FeatureErrorBoundary name="Email settings" resetKey={activeView}>
+                    <EmailSettingsView {...models.email.settings} />
+                  </FeatureErrorBoundary>
+                ) : null}
+              </EmailManagementTabs>
             </>
           ) : null}
         </main>

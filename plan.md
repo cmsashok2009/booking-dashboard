@@ -704,3 +704,134 @@ No implementation phase is complete until its verification evidence is recorded 
 - Verification: frontend lint/build and 162/162 tests passed; backend 60 passed with 2 infrastructure skips; all services healthy.
 - Evidence: docs/quality-reports/portable-docker-product-2026-08-02.md.
 - Remaining gates: VPS TLS, backup/restore drill, browser screenshot evidence, and current Next transitive advisory updates.
+### 2026-08-02 - Onboarding Recovery and Template Editor
+
+- Fixed invitation readiness errors so the API returns a stable, actionable provider error instead of throwing a secondary generic 500; users and workflow progress remain saved.
+- Explicitly cancelling onboarding now removes only unsent `pending_invitation` users created by that workflow from Current Users, while retaining the cancelled workflow and audit history; the same email can then start a fresh journey.
+- Moved the activation-template quick editor to the shared right-side drawer with fixed header/footer and added a Tiptap visual HTML editor with Lucide formatting controls.
+- Verification: backend onboarding 13/13; frontend focused 31/31 and full 165/165; frontend production build and changed-file lint passed; isolated backend process security 2/2; rebuilt Compose services healthy.
+- Cancellation follow-up verification: backend full suite 62 passed with 2 infrastructure skips; frontend cancellation suites 28/28 passed.
+- Evidence: `docs/quality-reports/onboarding-recovery-and-template-editor-2026-08-02.md`.
+- Gate remains BLOCKED only on required desktop/mobile browser screenshots and keyboard/console checks because the in-app browser runtime failed twice with a Windows ACL sandbox error; dependency advisory attribution is also pending an authorized registry audit.
+
+### 2026-08-02 - Clean Production Access Management
+
+- Removed the legacy startup migration that re-added seeded Area/Regional Manager and hierarchy demo accounts in production.
+- Added exact seed ID plus normalized email reconciliation, preserving configured Admin and real/custom users.
+- Verification: validators 17/17; backend full suite 63 passed with 2 infrastructure skips; Docker services healthy; aggregate database check reports 2 users, 0 legacy demo users, and 2 Admins.
+- Evidence: `docs/quality-reports/onboarding-recovery-and-template-editor-2026-08-02.md`.
+
+### 2026-08-02 - Admin Visibility in Access Management
+
+- Removed the frontend-only rule that hid Admin accounts from Current Users and filter option lists.
+- Verification: focused frontend tests 5/5; production build passed; rebuilt Docker backend/frontend are healthy.
+- Browser screenshot verification remains blocked by the existing Windows ACL browser-runtime issue.
+- Evidence: `docs/quality-reports/onboarding-recovery-and-template-editor-2026-08-02.md`.
+
+### 2026-08-02 - Admin Activation with Temporary Password
+
+- Added an explicit pending-account recovery action that atomically activates the user, sets a hash-only temporary password, requires password change, revokes activation/reset links and sessions, and records a dedicated audit event.
+- The drawer updates the table to Active and confirms activation without exposing the password again.
+- Verification: password tests 6/6; drawer tests 8/8; frontend production build passed; backend process security 2/2 in isolation; rebuilt Docker services healthy.
+- Live browser screenshot verification remains blocked by the existing Windows ACL browser-runtime issue.
+- Evidence: `docs/quality-reports/onboarding-recovery-and-template-editor-2026-08-02.md`.
+
+### 2026-08-02 - Access Master Data Drawer
+
+- Moved Add Single User to the shared side drawer with fixed header/footer and preserved form state.
+- Added Admin-only Region and Dealer Code creation detours with normalization, duplicate validation, persistence, auditing, automatic return, and automatic selection.
+- Added persistent Region/Dealer Code bootstrap catalogs and onboarding validation support.
+- Verification: backend 67 passed with 2 infrastructure skips; frontend 167/167; production build and OpenAPI parse passed; Docker services healthy.
+- Browser evidence remains blocked by the existing Windows ACL browser-runtime issue.
+- Evidence: `docs/quality-reports/access-master-data-drawer-2026-08-02.md`.
+
+
+### 2026-08-02 - Reference Data Tabs and Brand Hierarchy
+
+- Renamed the page and navigation to Reference Data and introduced grouped Access Data and Booking Workflow tabs.
+- Enhanced the shared Tabs component with roving focus and Arrow/Home/End keyboard navigation.
+- Added selected parent-group and child-tab states, corrected global hover-rule interference, and preserved narrow-screen horizontal navigation.
+- Added Region and Dealer Code catalogs, protected create/update APIs, OpenAPI contracts, and active-master validation for single and bulk onboarding.
+- Verification: Reference Data backend 21/21; tabs/components 11/11; frontend production build passed; rebuilt Docker backend/frontend healthy.
+- Browser screenshot and live responsive evidence remain BLOCKED by the Windows ACL browser-runtime failure.
+- Evidence: `docs/quality-reports/reference-data-tabs-2026-08-02.md`.
+
+- Connected the Reference Data tab header directly to its content panel, strengthened the selected parent group, and merged the active child tab into the page surface. Focused tests 11/11; rebuilt frontend healthy.
+
+
+### 2026-08-02 - Email Management Workspace
+
+- Consolidated Message Templates, Delivery Logs, and Email Configuration into one Email Management sidebar destination with shared child tabs.
+- Preserved all existing routes while keeping the parent sidebar item selected for every email subsection.
+- Renamed Access Management to User Management and ordered Business Settings directly below it.
+- Verification: focused frontend tests 18/18; production build passed.
+- Live browser evidence remains blocked by the Windows ACL browser-runtime failure.
+- Evidence: `docs/quality-reports/email-management-navigation-2026-08-02.md`.
+
+- Reordered Email Management to configuration, templates, then delivery; made configuration the default; removed tab/body spacing and vertical tab-header overflow in Email Management and Business Settings. Focused tests 25/25 passed.
+
+
+### 2026-08-02 - Shared Grouped Admin Tabs
+
+- Added a reusable GroupedTabs component with parent categories, contextual child tabs, vertical parent separators, and shared keyboard behavior.
+- Migrated Business Settings and Email Management to the component.
+- Connected both tab headers directly to their content surfaces and suppressed vertical tab overflow.
+- Verification: focused frontend tests 25/25; production build passed.
+- Live desktop/mobile evidence remains blocked by the Windows ACL browser-runtime failure.
+- Evidence: `docs/quality-reports/grouped-admin-tabs-2026-08-02.md`.
+
+
+### 2026-08-02 - Full-Canvas Tabbed Workspaces
+
+- Added TabbedWorkspace to own parent tabs, child tabs, and the complete selected page canvas.
+- Migrated Business Settings and Email Management from separate navigation/body containers.
+- Flattened direct email section cards into divider-based sections while preserving framed tables and metrics.
+- Verification: focused frontend tests 25/25; production build passed.
+- Live browser evidence remains blocked by the Windows ACL browser-runtime failure.
+- Evidence: `docs/quality-reports/grouped-admin-tabs-2026-08-02.md`.
+
+### 2026-08-02 - Unified Tab Shells and Email Drawers
+
+- Extended GroupedTabs for one-level workspaces and migrated Booking Management into TabbedWorkspace.
+- Ensured Booking Management, Business Settings, and Email Management keep the complete selected page inside the tab shell.
+- Flattened direct email subsection cards into one continuous canvas and strengthened selected parent tabs with a branded top edge.
+- Moved organization-template editing, starter preview, and live preview to shared right-side drawers.
+- Reused the existing TipTap visual editor while preserving the bodyHtml and plain-text fallback contracts.
+- Verification: focused frontend tests 36/36; production build passed.
+- Live desktop/mobile evidence remains BLOCKED by the Windows ACL browser-runtime failure.
+- Evidence: docs/quality-reports/tabbed-workspaces-email-drawers-2026-08-02.md.
+
+### 2026-08-02 - Bulk Onboarding Drawer Follow-up
+
+- Corrected starter-preview Subject label/value spacing.
+- Migrated Bulk User Onboarding to the shared right-side drawer with fixed header/progress and a scrollable step body.
+- Preserved nested template editing, confirmation layering, upload validation, resumable progress, and cancellation behavior.
+- Verification: focused onboarding and preview tests 26/26; production build passed.
+- Live browser evidence remains BLOCKED by the Windows ACL browser-runtime failure.
+- Evidence: docs/quality-reports/tabbed-workspaces-email-drawers-2026-08-02.md.
+
+### 2026-08-02 - Built-in Roles and Catalog-backed User Filters
+
+- Added read-only Roles as the first Business Settings Access Data tab.
+- Reused normalized built-in role definitions in User Management filters and user forms.
+- Populated status filters from supported lifecycle states and region filters from active master data.
+- Added a reusable illustrated no-data table state.
+- Verification: frontend focused tests 41/41; backend role/master-data tests 21/21; frontend production build passed.
+- Live browser evidence remains BLOCKED by the Windows ACL browser-runtime failure.
+- Evidence: docs/quality-reports/built-in-role-catalog-filters-2026-08-02.md.
+### 2026-08-02 - Dealer Code and User Region Linking
+
+- Linked Dealer Code selection to its authoritative Region in single-user onboarding and protected the linked Region from incompatible edits.
+- Added an empty-state Add Region detour that returns to Dealer Code creation without losing user-form state.
+- Enforced Dealer Code/Region consistency for single-user and bulk-upload validation with field-specific errors.
+- Verification: focused frontend 11/11; focused backend 21/21; full frontend 172/172; production build passed; server security rerun 2/2 after full-suite startup contention.
+- Live browser evidence remains BLOCKED by the Windows ACL browser-runtime failure.
+- Evidence: `docs/quality-reports/dealer-user-region-linking-2026-08-02.md`.
+### 2026-08-02 - Sticky Workspace Tabs and User Management Shell
+
+- Made shared TabbedWorkspace navigation sticky beneath the persistent page topbar for Booking Management, Business Settings, Email Management, and User Management.
+- Migrated User Management to connected Current Users and Add Users tabs, with Current Users as the default operational view and onboarding recovery in Add Users.
+- Anchored the booking no-data state to the visible table viewport so it remains centered during horizontal scrolling.
+- Verification: cross-workspace tests 21/21; full frontend 172/172; production build passed.
+- Live desktop/mobile evidence remains BLOCKED by the Windows ACL browser-runtime failure.
+- Evidence: `docs/quality-reports/sticky-workspace-tabs-user-management-2026-08-02.md`.

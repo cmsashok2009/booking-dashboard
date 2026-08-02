@@ -67,6 +67,23 @@ test("admin can set a temporary password without storing plaintext", () => {
   assert.equal(db.auditLogs[0].userId, "u-admin");
 });
 
+test("admin can activate a pending invitation while setting a temporary password", () => {
+  const db = seedData();
+  const user = db.users.find((item) => item.id === "u-am-west");
+  user.status = "pending_invitation";
+  db.activationTokens = [{ id: "activation", userId: user.id, usedAt: "", revokedAt: "" }];
+
+  const result = adminSetTemporaryPassword(db, user.id, "u-admin", "TemporaryPass123", { activatePending: true });
+
+  assert.equal(result.valid, true);
+  assert.equal(result.activated, true);
+  assert.equal(user.status, "active");
+  assert.equal(user.mustChangePassword, true);
+  assert.ok(user.activatedAt);
+  assert.ok(db.activationTokens[0].revokedAt);
+  assert.equal(db.auditLogs[0].action, "admin_user_activated_with_temporary_password");
+});
+
 test("admin temporary password validates account and password policy", () => {
   const db = seedData();
   assert.equal(adminSetTemporaryPassword(db, "missing", "u-admin", "TemporaryPass123").status, 404);

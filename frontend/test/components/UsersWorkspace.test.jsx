@@ -35,10 +35,13 @@ describe("users workspace", () => {
   it("supports entry actions, workflow resume, download, filtering, sorting, and clear", async () => {
     const values = props();
     render(<UsersWorkspace {...values} />);
+    expect(screen.getByRole("tab", { name: "Current Users" })).toHaveAttribute("aria-selected", "true");
+    await userEvent.click(screen.getByRole("tab", { name: "Add Users" }));
     await userEvent.click(screen.getByRole("button", { name: "Add Single User" }));
     await userEvent.click(screen.getByRole("button", { name: "Bulk Upload" }));
     await userEvent.click(screen.getByRole("button", { name: "Abort" }));
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Current Users" }));
     await userEvent.click(screen.getByRole("button", { name: "Download Users" }));
     await userEvent.type(screen.getByLabelText("Search users"), "Ravi");
     await userEvent.selectOptions(screen.getByLabelText("Filter users by role"), "Dealer");
@@ -53,6 +56,22 @@ describe("users workspace", () => {
     expect(values.onSort).toHaveBeenCalledWith("name");
   });
 
+  it("fills filters from role, status, and region catalogs", () => {
+    render(
+      <UsersWorkspace
+        {...props({
+          roles: ["Area Manager", "Regional Manager", "All India I", "All India II", "All India", "Admin"],
+          regions: ["North", "South", "East", "West", "Central"]
+        })}
+      />
+    );
+    const roleOptions = [...screen.getByLabelText("Filter users by role").options].map((option) => option.text);
+    expect(roleOptions).toEqual(
+      expect.arrayContaining(["Area Manager", "Regional Manager", "All India I", "All India II", "All India", "Admin"])
+    );
+    expect(screen.getByLabelText("Filter users by status")).toHaveTextContent("Pending Invitation");
+    expect(screen.getByLabelText("Filter users by region")).toHaveTextContent("Central");
+  });
   it("hides completed workflows and reports empty user views", () => {
     render(
       <UsersWorkspace

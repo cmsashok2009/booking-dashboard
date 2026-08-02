@@ -27,7 +27,7 @@ export default function useDashboardController() {
   const [bookingFilters, setBookingFilters] = useState({ ...EMPTY_BOOKING_FILTERS });
   const [uploadPreview, setUploadPreview] = useState(null);
   const [pendingBookingUpload, setPendingBookingUpload] = useState(null);
-  const [selectedAreaField, setSelectedAreaField] = useState("bookingCategory");
+  const [selectedAreaField, setSelectedAreaField] = useState("roles");
   const [addOptionModalOpen, setAddOptionModalOpen] = useState(false);
   const [userTable, setUserTable] = useState({
     search: "",

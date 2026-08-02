@@ -159,7 +159,13 @@ export function buildDashboardViewModel(context) {
     },
     areaFields: {
       selectedField: selectedAreaField,
-      options: bootstrap?.lookupOptions?.[selectedAreaField] || [],
+      options: selectedAreaField === "roles"
+        ? (bootstrap?.roleDefinitions || []).map((item) => ({ ...item, id: item.code, label: item.name, status: item.isActive ? "active" : "inactive" }))
+        : selectedAreaField === "regions"
+          ? (bootstrap?.regionOptions || []).map((item) => ({ ...item, label: item.name }))
+          : selectedAreaField === "dealerCodes"
+          ? (bootstrap?.dealerCodes || []).map((item) => ({ ...item, label: item.code }))
+          : bootstrap?.lookupOptions?.[selectedAreaField] || [],
       search: areaOptionSearch,
       status: areaOptionStatus,
       editingId: editingOptionId,
@@ -189,7 +195,7 @@ export function buildDashboardViewModel(context) {
       filteredUsers,
       filters: userTable,
       page: userPage,
-      roles: bootstrap?.roles || [],
+      roles: (bootstrap?.roleDefinitions || []).map((role) => role.name),
       regions: bootstrap?.regions || [],
       workflows: bootstrap?.onboardingWorkflows || [],
       onAddSingle: () => {
@@ -277,6 +283,7 @@ export function buildDashboardViewModel(context) {
     profilePhotoSaved,
     changeSingleUserRole,
     clearSingleUserError: (name) => setSingleUserErrors((current) => ({ ...current, [name]: undefined })),
+    refreshAccessMasterData: loadBootstrap,
     closeSingleUser: () => setSingleUserModalOpen(false),
     createSingleUser,
     closeBookingDetails: () => setSelectedBooking(null),

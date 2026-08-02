@@ -77,7 +77,7 @@ export default function EmailTemplatesView({
           </Button>
         </div>
       ) : null}
-      <section className="panel template-library">
+      <section className="email-content-section template-library">
         <div className="section-heading-row">
           <div>
             <h2>Starter Templates</h2>
@@ -127,7 +127,7 @@ export default function EmailTemplatesView({
           </div>
         )}
       </section>
-      <section className="panel">
+      <section className="email-content-section organization-templates">
         <div className="section-heading-row">
           <div>
             <h2>Organization Templates</h2>
