@@ -1,0 +1,255 @@
+﻿/* Booking details side drawer */
+.booking-detail-backdrop {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+  background: var(--palette-rgb-15-23-42-0-38);
+  animation: booking-drawer-fade-in 160ms ease-out;
+}
+
+.booking-detail-modal .area-input-grid,
+.booking-detail-modal .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.booking-detail-modal .area-input-grid > button,
+.booking-detail-modal .form-grid > button {
+  justify-self: start;
+}
+
+@keyframes booking-drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes booking-drawer-slide-in {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (width <= 760px) {
+  .booking-detail-modal {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .booking-detail-header,
+  .booking-detail-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .booking-detail-modal .area-input-grid,
+  .booking-detail-modal .form-grid,
+  .booking-definition-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-detail-backdrop,
+  .booking-detail-modal {
+    animation: none;
+  }
+}
+
+/* Reusable side drawer shell */
+.side-drawer-backdrop {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+  background: var(--palette-rgb-15-23-42-0-38);
+  animation: booking-drawer-fade-in 160ms ease-out;
+}
+
+.side-drawer {
+  width: min(520px, 100vw);
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: 0;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: -16px 0 40px var(--palette-rgb-15-23-42-0-18);
+  animation: booking-drawer-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.side-drawer.booking-detail-modal {
+  width: min(760px, 100vw);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-drawer-backdrop,
+  .side-drawer {
+    animation: none;
+  }
+}
+
+/* Mobile primary navigation drawer */
+.mobile-nav-backdrop {
+  justify-content: flex-start;
+}
+
+.mobile-nav-drawer {
+  width: min(320px, 88vw);
+  background: var(--palette-111b2e);
+  color: var(--palette-eef2ff);
+  animation-name: mobile-nav-slide-in;
+}
+
+.mobile-nav-header {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--palette-rgb-255-255-255-0-07);
+}
+
+.mobile-nav-header .app-close-button {
+  border-color: var(--palette-rgb-255-255-255-0-07);
+  background: transparent;
+  color: var(--palette-eef2ff);
+}
+
+.mobile-nav-drawer .nav {
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+@keyframes mobile-nav-slide-in {
+  from {
+    transform: translateX(-32px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+button.app-button.outline {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--interactive-ink);
+}
+
+button.app-button.outline:hover:not(:disabled),
+button.app-button.outline:focus-visible {
+  border-color: var(--interactive-hover-border);
+  background: var(--interactive-hover-bg);
+  color: var(--interactive-hover-ink);
+}
+
+button.app-button.outline:disabled {
+  border-color: var(--line);
+  background: transparent;
+}
+
+.feature-error-boundary {
+  width: 100%;
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+/* Admin temporary password drawer */
+.admin-temporary-password-drawer {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-temporary-password-header,
+.admin-temporary-password-body,
+.admin-temporary-password-footer,
+.admin-temporary-password-complete {
+  padding: 24px;
+}
+
+.admin-temporary-password-header {
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-temporary-password-form,
+.admin-temporary-password-complete {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-temporary-password-body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.admin-temporary-password-user {
+  display: grid;
+  gap: 0;
+  margin: 0 0 24px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-temporary-password-user > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-temporary-password-user dt {
+  color: var(--muted);
+}
+
+.admin-temporary-password-user dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.admin-temporary-password-footer {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-temporary-password-complete {
+  justify-content: space-between;
+}
+
+@media (width <= 520px) {
+  .admin-temporary-password-header,
+  .admin-temporary-password-body,
+  .admin-temporary-password-footer,
+  .admin-temporary-password-complete {
+    padding: 18px;
+  }
+}

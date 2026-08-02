@@ -1,0 +1,165 @@
+﻿import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const request = vi.hoisted(() => vi.fn());
+vi.mock("../../app/utils/api", () => ({ request }));
+import EditableUsersTable from "../../app/components/EditableUsersTable";
+import SingleUserModal from "../../app/features/users/SingleUserModal";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  request.mockReset();
+});
+
+const user = {
+  id: "u1",
+  name: "Ravi",
+  email: "ravi@example.com",
+  role: "Dealer",
+  region: "North",
+  status: "active",
+  phone: "9000000000",
+  dealerCode: "D1",
+  reportingManagerEmail: "manager@example.com"
+};
+
+describe("single-user modal", () => {
+  function props(overrides = {}) {
+    return {
+      open: true,
+      roles: ["Admin", "Area Manager", "Dealer"],
+      regions: ["North"],
+      roleDefinitions: [
+        { name: "Area Manager", code: "AM", managerRoleCode: "RM" },
+        { name: "Regional Manager", code: "RM" }
+      ],
+      role: "Area Manager",
+      errors: {},
+      onRoleChange: vi.fn(),
+      onClearError: vi.fn(),
+      onClose: vi.fn(),
+      onSubmit: vi.fn(),
+      ...overrides
+    };
+  }
+
+  it("renders role requirements, clears errors, and submits mapped values", async () => {
+    const values = props({ errors: { Name: "Required", "Reporting Manager Email": "Manager required" } });
+    render(<SingleUserModal {...values} />);
+    expect(screen.getByText("Required")).toHaveAttribute("id", "single-user-Name-error");
+    await userEvent.type(screen.getByRole("textbox", { name: "Name" }), "Ravi");
+    await userEvent.type(screen.getByRole("textbox", { name: "Email" }), "ravi@example.com");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Region" }), "North");
+    await userEvent.type(screen.getByRole("textbox", { name: "Reporting Manager Email" }), "manager@example.com");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Role" }), "Admin");
+    await userEvent.click(screen.getByRole("button", { name: "Continue to invitation" }));
+    expect(values.onRoleChange).toHaveBeenCalledWith("Admin");
+    expect(values.onClearError).toHaveBeenCalled();
+    expect(values.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ Name: "Ravi", Email: "ravi@example.com" }));
+  });
+
+  it("uses hidden defaults for roles without region or manager requirements", () => {
+    const { container } = render(<SingleUserModal {...props({ role: "Admin" })} />);
+    expect(container.querySelector('input[name="Region"]')).toHaveValue("All");
+    expect(container.querySelector('input[name="Reporting Manager Email"]')).toHaveValue("");
+  });
+});
+
+describe("editable users table", () => {
+  function renderTable(overrides = {}) {
+    const values = {
+      users: [user],
+      roles: ["Dealer", "Area Manager"],
+      regions: ["North", "South"],
+      updatedBy: "admin",
+      sortState: { key: "name", direction: "asc" },
+      onSort: vi.fn(),
+      onUserUpdated: vi.fn(),
+      ...overrides
+    };
+    return { values, ...render(<EditableUsersTable {...values} />) };
+  }
+
+  it("sorts columns and shows empty results", async () => {
+    const { values, rerender } = renderTable();
+    await userEvent.click(screen.getByRole("button", { name: /Name/ }));
+    expect(values.onSort).toHaveBeenCalledWith("name");
+    rerender(<EditableUsersTable {...values} users={[]} />);
+    expect(screen.getByText("No users match the current filters.")).toBeInTheDocument();
+  });
+
+  it("edits and saves a valid user", async () => {
+    const { values } = renderTable();
+    request.mockResolvedValueOnce({ user: { ...user, name: "Ravi Kumar" } });
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const name = screen.getByLabelText("Name for ravi@example.com");
+    await userEvent.clear(name);
+    await userEvent.type(name, "Ravi Kumar");
+    await userEvent.selectOptions(screen.getByLabelText("Region for Ravi"), "South");
+    await userEvent.selectOptions(screen.getByLabelText("Status for Ravi"), "inactive");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(request).toHaveBeenCalledWith("/api/ui/users/update", expect.objectContaining({ method: "PATCH" }));
+    expect(values.onUserUpdated).toHaveBeenCalledWith(expect.objectContaining({ name: "Ravi Kumar" }));
+    expect(await screen.findByText(/updated successfully/i)).toBeInTheDocument();
+  });
+
+  it("validates required values and maps server field errors", async () => {
+    const { unmount } = renderTable();
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.clear(screen.getByLabelText("Name for ravi@example.com"));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByText("Name is required.")).toBeInTheDocument();
+    expect(screen.getByText(/highlighted required fields/i)).toBeInTheDocument();
+    unmount();
+
+    request.mockRejectedValueOnce({
+      message: "Rejected",
+      payload: { errors: [{ columnName: "Email", errorMessage: "Already exists" }] }
+    });
+    renderTable();
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByText("Already exists")).toBeInTheDocument();
+    expect(await screen.findByText("Rejected")).toBeInTheDocument();
+  });
+
+  it("prompts before discarding dirty edits and supports stay, Escape, and discard", async () => {
+    renderTable();
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.type(screen.getByLabelText("Name for ravi@example.com"), " changed");
+    fireEvent.pointerDown(document.body);
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Stay Editing" }));
+    fireEvent.pointerDown(document.body);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    fireEvent.pointerDown(document.body);
+    await userEvent.click(screen.getByRole("button", { name: "Discard Changes" }));
+    expect(screen.queryByLabelText("Name for ravi@example.com")).not.toBeInTheDocument();
+  });
+
+  it("lets an Admin set a temporary password from a focus-managed drawer", async () => {
+    renderTable();
+    await userEvent.click(screen.getByRole("button", { name: "Set password" }));
+    expect(screen.getByRole("dialog", { name: "Set temporary password" })).toBeInTheDocument();
+    expect(screen.getAllByText("ravi@example.com")).toHaveLength(2);
+
+    await userEvent.type(screen.getByLabelText(/New password/), "TemporaryPass123");
+    await userEvent.type(screen.getByLabelText(/Confirm password/), "TemporaryPass456");
+    await userEvent.click(screen.getByRole("button", { name: "Set temporary password" }));
+    expect(screen.getAllByText("Passwords do not match.").length).toBeGreaterThan(0);
+    expect(request).not.toHaveBeenCalled();
+
+    await userEvent.clear(screen.getByLabelText(/Confirm password/));
+    await userEvent.type(screen.getByLabelText(/Confirm password/), "TemporaryPass123");
+    request.mockResolvedValueOnce({ updated: true, mustChangePassword: true });
+    await userEvent.click(screen.getByRole("button", { name: "Set temporary password" }));
+    expect(request).toHaveBeenCalledWith("/api/admin/users/u1/temporary-password", expect.objectContaining({ method: "POST" }));
+    expect(await screen.findByText("Temporary password updated")).toBeInTheDocument();
+    expect(screen.getByText(/Existing sessions and password reset links have been revoked/i)).toBeInTheDocument();
+  });
+});
+
+
+

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Booking Dashboard API"
+  short_description: "Validate API security contracts and resilience"
+  default_prompt: "Audit this booking dashboard API change and report each applicable API ID as PASS, FAIL, N/A, or BLOCKED with evidence."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Booking Dashboard UX"
+  short_description: "Validate workflow usability and accessibility"
+  default_prompt: "Audit this booking dashboard UX change and report each applicable UX ID as PASS, FAIL, N/A, or BLOCKED with evidence."

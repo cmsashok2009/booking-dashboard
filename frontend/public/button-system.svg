@@ -1,0 +1,75 @@
+<svg width="1280" height="820" viewBox="0 0 1280 820" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Booking Dashboard Button System</title>
+  <desc id="desc">Shared button types and states with colors for the booking dashboard frontend.</desc>
+  <rect width="1280" height="820" rx="28" fill="#F6F8FC"/>
+  <text x="56" y="76" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="34" font-weight="700">Booking Dashboard button system</text>
+  <text x="56" y="112" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="16">Reusable component variants and state colors used across the frontend.</text>
+
+  <rect x="56" y="148" width="1168" height="612" rx="24" fill="#FFFFFF" stroke="#DCE4F0"/>
+
+  <text x="88" y="196" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="700">Types</text>
+  <text x="88" y="226" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14">Primary, secondary, ghost, danger, and quiet danger are the shared variants.</text>
+
+  <text x="88" y="280" fill="#334155" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Primary</text>
+  <rect x="240" y="255" width="180" height="44" rx="8" fill="#1F6FEB"/>
+  <text x="330" y="283" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Default</text>
+  <rect x="448" y="255" width="180" height="44" rx="8" fill="#1257B1"/>
+  <text x="538" y="283" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Hover</text>
+  <rect x="656" y="255" width="180" height="44" rx="8" fill="#0F4B99"/>
+  <text x="746" y="283" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Active</text>
+  <rect x="864" y="255" width="180" height="44" rx="8" fill="#1F6FEB" opacity="0.45"/>
+  <text x="954" y="283" text-anchor="middle" fill="#1E3A5F" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Disabled</text>
+
+  <text x="88" y="356" fill="#334155" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Secondary</text>
+  <rect x="240" y="331" width="180" height="44" rx="8" fill="#EEF2F7"/>
+  <text x="330" y="359" text-anchor="middle" fill="#1E293B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Default</text>
+  <rect x="448" y="331" width="180" height="44" rx="8" fill="#E4EAF2"/>
+  <text x="538" y="359" text-anchor="middle" fill="#1E293B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Hover</text>
+  <rect x="656" y="331" width="180" height="44" rx="8" fill="#D6DFEA"/>
+  <text x="746" y="359" text-anchor="middle" fill="#1E293B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Active</text>
+  <rect x="864" y="331" width="180" height="44" rx="8" fill="#EEF2F7" opacity="0.45"/>
+  <text x="954" y="359" text-anchor="middle" fill="#1E293B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Disabled</text>
+
+  <text x="88" y="432" fill="#334155" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Ghost</text>
+  <rect x="240" y="407" width="180" height="44" rx="8" fill="#FFFFFF" stroke="#D5DFEB"/>
+  <text x="330" y="435" text-anchor="middle" fill="#1F6FEB" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Default</text>
+  <rect x="448" y="407" width="180" height="44" rx="8" fill="#F3F7FC" stroke="#C9D5E6"/>
+  <text x="538" y="435" text-anchor="middle" fill="#1257B1" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Hover</text>
+  <rect x="656" y="407" width="180" height="44" rx="8" fill="#E8EEF7" stroke="#BFD0EA"/>
+  <text x="746" y="435" text-anchor="middle" fill="#0F4B99" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Active</text>
+  <rect x="864" y="407" width="180" height="44" rx="8" fill="#FFFFFF" stroke="#D5DFEB" opacity="0.45"/>
+  <text x="954" y="435" text-anchor="middle" fill="#94A3B8" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Disabled</text>
+
+  <text x="88" y="508" fill="#334155" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Danger</text>
+  <rect x="240" y="483" width="180" height="44" rx="8" fill="#C43228"/>
+  <text x="330" y="511" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Default</text>
+  <rect x="448" y="483" width="180" height="44" rx="8" fill="#A92B23"/>
+  <text x="538" y="511" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Hover</text>
+  <rect x="656" y="483" width="180" height="44" rx="8" fill="#8E231D"/>
+  <text x="746" y="511" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Active</text>
+  <rect x="864" y="483" width="180" height="44" rx="8" fill="#C43228" opacity="0.45"/>
+  <text x="954" y="511" text-anchor="middle" fill="#7F1D1D" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Disabled</text>
+
+  <text x="88" y="584" fill="#334155" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Quiet danger</text>
+  <rect x="240" y="559" width="180" height="44" rx="8" fill="#FFF5F4" stroke="#F0C5C1"/>
+  <text x="330" y="587" text-anchor="middle" fill="#B42318" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Default</text>
+  <rect x="448" y="559" width="180" height="44" rx="8" fill="#FDECEC" stroke="#E9A59D"/>
+  <text x="538" y="587" text-anchor="middle" fill="#9C1F17" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Hover</text>
+  <rect x="656" y="559" width="180" height="44" rx="8" fill="#FBD9D6" stroke="#E08D84"/>
+  <text x="746" y="587" text-anchor="middle" fill="#8E1812" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Active</text>
+  <rect x="864" y="559" width="180" height="44" rx="8" fill="#FFF5F4" stroke="#F0C5C1" opacity="0.45"/>
+  <text x="954" y="587" text-anchor="middle" fill="#BFA7A4" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">Disabled</text>
+
+  <text x="88" y="674" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="700">States</text>
+  <text x="88" y="702" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14">Default, hover, active, disabled, and loading are supported through the shared component.</text>
+  <rect x="88" y="726" width="116" height="38" rx="8" fill="#1F6FEB"/>
+  <text x="146" y="750" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Default</text>
+  <rect x="216" y="726" width="116" height="38" rx="8" fill="#1257B1"/>
+  <text x="274" y="750" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Hover</text>
+  <rect x="344" y="726" width="116" height="38" rx="8" fill="#0F4B99"/>
+  <text x="402" y="750" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Active</text>
+  <rect x="472" y="726" width="116" height="38" rx="8" fill="#1F6FEB" opacity="0.45"/>
+  <text x="530" y="750" text-anchor="middle" fill="#1E3A5F" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Disabled</text>
+  <rect x="600" y="726" width="116" height="38" rx="8" fill="#1F6FEB"/>
+  <text x="658" y="750" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Loading</text>
+</svg>

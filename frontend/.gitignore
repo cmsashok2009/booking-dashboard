@@ -1,0 +1,51 @@
+# Dependencies
+/node_modules/
+
+# Next.js build and runtime output
+/.next/
+/out/
+
+# Test and coverage output
+/coverage/
+/playwright-report/
+/test-results/
+/.nyc_output/
+
+# Local scratch and generated evidence
+/.tmp/
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Runtime and package-manager logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript and tool caches
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.turbo/
+
+# Local editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Deployment provider metadata
+.vercel/
+.netlify/

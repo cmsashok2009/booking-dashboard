@@ -1,0 +1,68 @@
+# Dependencies
+**/node_modules/
+
+# Frontend build, cache, and test output
+/frontend/.next/
+/frontend/out/
+/frontend/coverage/
+/frontend/playwright-report/
+/frontend/test-results/
+/frontend/.nyc_output/
+/frontend/.tmp/
+
+# Backend runtime persistence (may contain credentials or personal data)
+/backend/data/*
+!/backend/data/.gitkeep
+
+# Environment files and local secrets
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+**/*.pem
+**/*.key
+
+# Logs, process files, and tool caches
+**/*.log
+**/*.pid
+**/*.tsbuildinfo
+**/.eslintcache
+**/.stylelintcache
+**/.turbo/
+
+# Local editor settings
+**/.idea/
+**/.vscode/
+**/*.swp
+**/*.swo
+
+# Operating-system metadata
+**/.DS_Store
+**/Thumbs.db
+**/Desktop.ini
+
+# Deployment provider metadata
+**/.vercel/
+**/.netlify/
+
+# Accidental local command artifact
+/npm
+.env.docker
+
+# Docker/local volumes and backups
+mysql-data/
+redis-data/
+*.sql
+!backend/migrations/*.sql
+*.dump
+*.backup
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Internal planning docs
+BACKEND_SECURITY_PRIVACY_RELIABILITY_10_OF_10_PLAN.md
+GMAIL_OAUTH_IMPLEMENTATION_PLAN.md
+implementation-plan.md

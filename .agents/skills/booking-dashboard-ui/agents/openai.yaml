@@ -1,0 +1,4 @@
+interface:
+  display_name: "Booking Dashboard UI"
+  short_description: "Validate visual design and responsive components"
+  default_prompt: "Audit this booking dashboard UI change and report each applicable UI ID as PASS, FAIL, N/A, or BLOCKED with evidence."

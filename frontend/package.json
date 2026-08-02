@@ -1,0 +1,56 @@
+{
+  "name": "booking-dashboard-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Next.js frontend for the role based booking dashboard.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run --maxWorkers=2",
+    "test:unit": "vitest run test/*.test.js --maxWorkers=2",
+    "test:components": "vitest run --maxWorkers=2",
+    "test:coverage": "vitest run --coverage --maxWorkers=2",
+    "test:e2e": "playwright test",
+    "lint": "eslint app test",
+    "check:modules": "node scripts/check-module-size.mjs",
+    "check:cycles": "node scripts/check-import-cycles.mjs",
+    "check:architecture": "npm run check:modules && npm run check:cycles",
+    "check:css-architecture": "node scripts/check-css-architecture.mjs",
+    "check:controls": "node scripts/check-raw-controls.mjs",
+    "check:design-system": "npm run check:controls && npm run check:css-architecture && npm run lint:css",
+    "check:bundle": "node scripts/check-bundle-budget.mjs",
+    "check:scale": "node scripts/check-scale-performance.mjs",
+    "check:performance": "npm run check:bundle && npm run check:scale",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "lint:css": "stylelint \"app/**/*.css\"",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "quality": "npm run lint && npm run check:architecture && npm run check:design-system && npm run check:secrets && npm run format:check && npm test && npm run build && npm run check:performance"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.12",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.9.6",
+    "stylelint": "^17.14.1",
+    "stylelint-config-standard": "^40.0.0",
+    "vitest": "^4.1.10"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "booking-dashboard-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Role based booking dashboard with separate frontend and backend folders.",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix backend run test"
+  }
+}
