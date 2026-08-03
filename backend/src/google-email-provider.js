@@ -1,4 +1,4 @@
-﻿import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import nodemailer from "nodemailer";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -123,6 +123,10 @@ async function googleJson(url, options, label) {
   return payload;
 }
 
+function isRetryablePreAcceptance(error) {
+  return error.status === 429 || (error.status >= 500 && error.status <= 599);
+}
+
 export function beginGoogleAuthorization(db, adminId) {
   const config = requireGoogleConfig();
   ensureGoogleEmailData(db);
@@ -233,20 +237,35 @@ async function rawEmail({ from, to, subject, text, html }) {
   return message.message.toString("base64url");
 }
 
-export async function sendWithGmailApi(db, { to, subject, text, html }) {
+export async function sendWithGmailApi(db, { to, subject, text, html }, { signal } = {}) {
   const connection = activeConnection(db);
   if (!connection) {
     const error = new Error("No Google sender account is connected");
     error.code = "EMAIL_NOT_CONNECTED";
     throw error;
   }
-  const { accessToken } = await accessTokenForConnection(connection);
+  let accessToken;
+  try {
+    ({ accessToken } = await accessTokenForConnection(connection));
+  } catch (error) {
+    error.retryable = isRetryablePreAcceptance(error);
+    error.deliveryMayHaveSucceeded = false;
+    throw error;
+  }
   const raw = await rawEmail({ from: { name: process.env.SMTP_FROM_NAME || "Booking Dashboard", address: connection.accountEmail }, to, subject, text, html });
-  const result = await googleJson(GOOGLE_GMAIL_SEND_URL, {
-    method: "POST",
-    headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
-    body: JSON.stringify({ raw })
-  }, "Gmail delivery");
+  let result;
+  try {
+    result = await googleJson(GOOGLE_GMAIL_SEND_URL, {
+      method: "POST",
+      headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      body: JSON.stringify({ raw }),
+      signal
+    }, "Gmail delivery");
+  } catch (error) {
+    error.retryable = error.status === 429;
+    error.deliveryMayHaveSucceeded = error.status !== 429;
+    throw error;
+  }
   connection.lastVerifiedAt = new Date().toISOString();
   return { provider: "gmail_api", reference: result.id || result.threadId || "gmail-accepted", accepted: [to], rejected: [] };
 }

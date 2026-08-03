@@ -6,6 +6,7 @@ export function editableUserValues(user) {
     email: user.email || "",
     role: user.role || "",
     region: user.region || "",
+    dealerCode: user.dealerCode || "",
     status: user.status || ""
   };
 }
@@ -19,4 +20,25 @@ export function validateEditableUser(values) {
   if (!values.region) errors.region = "Region is required.";
   if (!values.status) errors.status = "Status is required.";
   return errors;
+}
+
+export function editableUserServerErrors(items = []) {
+  const fieldMap = {
+    Name: "name",
+    Email: "email",
+    Role: "role",
+    Region: "region",
+    "Dealer Code": "dealerCode",
+    Status: "status"
+  };
+  return Object.fromEntries(items.map((item) => [fieldMap[item.columnName] || item.columnName, item.errorMessage]));
+}
+
+export function editableUserRegionChange(current, region, dealerCodes) {
+  const selectedDealer = dealerCodes.find((item) => item.code === current.dealerCode);
+  return {
+    ...current,
+    region,
+    dealerCode: selectedDealer && selectedDealer.region !== region ? "" : current.dealerCode
+  };
 }

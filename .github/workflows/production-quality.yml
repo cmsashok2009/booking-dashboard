@@ -1,0 +1,168 @@
+name: Production quality
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "compose.yaml"
+      - ".github/workflows/production-quality.yml"
+      - "scripts/**"
+      - "test/**"
+      - "docs/**"
+      - "package.json"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "compose.yaml"
+      - ".github/workflows/production-quality.yml"
+      - "scripts/**"
+      - "test/**"
+      - "docs/**"
+      - "package.json"
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run test:security-scan
+      - run: npm run security:scan
+      - run: npm run test:runbooks
+      - run: npm run runbooks:check
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate SBOM generator
+        run: npm run test:sbom
+      - name: Generate production dependency SBOMs
+        run: npm run sbom:generate
+      - name: Retain CycloneDX SBOMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: booking-dashboard-sboms
+          path: .artifacts/sbom/*.cyclonedx.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Build backend image for vulnerability scan
+        run: docker build --tag booking-dashboard-backend:ci ./backend
+      - name: Scan backend image for Critical and High CVEs
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: local://booking-dashboard-backend:ci
+          only-severities: critical,high
+          exit-code: true
+          write-comment: false
+      - name: Build frontend image for vulnerability scan
+        run: docker build --tag booking-dashboard-frontend:ci ./frontend
+      - name: Scan frontend image for Critical and High CVEs
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: local://booking-dashboard-frontend:ci
+          only-severities: critical,high
+          exit-code: true
+          write-comment: false
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: booking_dashboard_test
+          MYSQL_USER: booking_test
+          MYSQL_PASSWORD: booking_test_password
+          MYSQL_ROOT_PASSWORD: booking_root_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pbooking_root_password --silent"
+          --health-interval=3s
+          --health-timeout=3s
+          --health-retries=30
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=3s
+          --health-timeout=3s
+          --health-retries=20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run check:architecture
+      - name: Validate OpenAPI JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('openapi.json','utf8'))"
+      - name: Run backend suite with MySQL and Redis integration
+        env:
+          TEST_DATABASE_URL: mysql://booking_test:booking_test_password@127.0.0.1:3306/booking_dashboard_test
+          TEST_REDIS_URL: redis://127.0.0.1:6379
+        run: npm test
+      - name: Run local API load smoke
+        env:
+          LOAD_SMOKE_START_BACKEND: "true"
+          LOAD_SMOKE_DURATION_SECONDS: "8"
+          LOAD_SMOKE_CONCURRENCY: "3"
+          LOAD_SMOKE_MIN_REQUESTS: "30"
+          LOAD_SMOKE_MAX_P95_MS: "750"
+          LOAD_SMOKE_MAX_ERROR_RATE: "0.01"
+        run: npm run load:smoke:local
+      - run: npm audit --audit-level=high
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run quality
+      - name: Run focused browser evidence
+        run: npx playwright test test/e2e/role-accessibility.spec.js test/e2e/responsive-dashboard.spec.js --project=chromium
+      - run: npm audit --audit-level=high
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Docker Compose config
+        env:
+          MYSQL_PASSWORD: ci_mysql_password
+          MYSQL_ROOT_PASSWORD: ci_mysql_root_password
+          DATA_ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+          TOKEN_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          INITIAL_ADMIN_EMAIL: admin@example.com
+          INITIAL_ADMIN_PASSWORD: AdminPassword123
+          SESSION_COOKIE_SECURE: "false"
+        run: docker compose --env-file .env.docker.example config --quiet

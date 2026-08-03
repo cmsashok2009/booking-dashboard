@@ -10,6 +10,8 @@ import {
   createSingleUserOnboarding,
   ensureOnboardingData,
   importOnboardingUsers,
+  ownedOnboardingWorkflow,
+  updateWorkflowRecipients,
   previewWorkflowEmail,
   renderTemplate,
   returnWorkflowToTemplate,
@@ -156,6 +158,51 @@ test("campaign creates digest-only activation records and cannot send twice", as
   assert.equal(JSON.stringify(db).includes("#token="), false);
 });
 
+test("campaign persists bounded retry attempts, terminal failure, and recipient idempotency", async () => {
+  const db = seedData();
+  ensureOnboardingData(db);
+  const workflow = createOnboardingWorkflow(db, parseCsv(validCsv()).rows, { actorId: "u-admin" });
+  importOnboardingUsers(db, workflow.id, "u-admin");
+  const template = cloneTemplateSample(db, "sample-activation-standard", "u-admin");
+  saveEmailTemplate(db, template.id, { status: "active" }, "u-admin");
+  selectWorkflowTemplate(db, workflow.id, template.id, "u-admin");
+  let calls = 0;
+  const deliver = async () => {
+    calls += 1;
+    if (calls === 1) {
+      return {
+        provider: "test-provider",
+        reference: "accepted-once",
+        attemptCount: 2,
+        retryEvents: [{ attempt: 1, code: "PROVIDER_BUSY", delayMs: 50 }]
+      };
+    }
+    const error = new Error("terminal provider failure");
+    error.code = "PROVIDER_UNAVAILABLE";
+    error.attemptCount = 3;
+    error.retryEvents = [
+      { attempt: 1, code: "PROVIDER_UNAVAILABLE", delayMs: 25 },
+      { attempt: 2, code: "PROVIDER_UNAVAILABLE", delayMs: 50 }
+    ];
+    throw error;
+  };
+
+  const campaign = await sendInvitationCampaign(db, workflow.id, "u-admin", "http://localhost:3000", { deliver });
+  const repeated = await sendInvitationCampaign(db, workflow.id, "u-admin", "http://localhost:3000", { deliver });
+
+  assert.equal(calls, 2);
+  assert.equal(repeated.id, campaign.id);
+  assert.equal(campaign.status, "partially_completed");
+  assert.equal(campaign.sent, 1);
+  assert.equal(campaign.failed, 1);
+  assert.deepEqual(campaign.recipients.map((recipient) => recipient.attemptCount), [2, 3]);
+  assert.ok(campaign.recipients.every((recipient) => recipient.idempotencyKey === `recipient:${campaign.id}:${recipient.userId}`));
+  assert.equal(db.emailDeliveryEvents.filter((event) => event.eventType === "retry_scheduled").length, 3);
+  assert.equal(db.emailDeliveryEvents.filter((event) => event.eventType === "sent").length, 1);
+  assert.equal(db.emailDeliveryEvents.filter((event) => event.eventType === "failed").length, 1);
+  assert.ok(db.activationTokens.every((token) => campaign.recipients.some((recipient) => recipient.id === token.recipientId)));
+  assert.equal(db.activationTokens.filter((token) => token.revokedAt).length, 1);
+});
 test("campaign preserves onboarding progress and explains how to recover when Gmail is not connected", async () => {
   const previousConfig = Object.fromEntries(["EMAIL_TRANSPORT", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI", "TOKEN_ENCRYPTION_KEY"].map((key) => [key, process.env[key]]));
   Object.assign(process.env, {
@@ -210,4 +257,28 @@ test("activation consumes a valid token once and activates the invited user", ()
   assert.ok(invited.passwordHash);
   assert.equal(validateActivationToken(db, rawToken).valid, false);
   assert.equal(JSON.stringify(result).includes("passwordHash"), false);
+});
+
+test("workflow ownership protects reads and recipient changes", () => {
+  const db = seedData();
+  ensureOnboardingData(db);
+  const workflow = createOnboardingWorkflow(db, parseCsv(validCsv()).rows, { actorId: "u-admin" });
+  importOnboardingUsers(db, workflow.id, "u-admin");
+
+  const deniedRead = ownedOnboardingWorkflow(db, workflow.id, "u-admin-other");
+  assert.equal(deniedRead.status, 409);
+  assert.equal(deniedRead.error, "This workflow is owned by another Admin");
+
+  const recipientId = workflow.createdUserIds[0];
+  const deniedWrite = updateWorkflowRecipients(db, workflow.id, [recipientId], "u-admin-other");
+  assert.equal(deniedWrite.status, 409);
+  assert.deepEqual(workflow.excludedRecipientIds, []);
+
+  const updated = updateWorkflowRecipients(
+    db,
+    workflow.id,
+    [recipientId, recipientId, "u-unrelated"],
+    "u-admin",
+  );
+  assert.deepEqual(updated.excludedRecipientIds, [recipientId]);
 });

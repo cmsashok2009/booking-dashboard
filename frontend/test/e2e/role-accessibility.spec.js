@@ -30,6 +30,7 @@ for (const role of roles) {
       region: role === "Admin" ? "All" : "North"
     };
     const bootstrap = {
+      currentUser: user,
       roles,
       regions: ["North", "South"],
       roleDefinitions: [],
@@ -51,14 +52,32 @@ for (const role of roles) {
     await page.route(
       (url) => url.pathname === "/api/bookings",
       (route) =>
-        route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ rows: [booking] }) })
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ rows: [booking], total: 1 })
+        })
+    );
+    await page.route("**/api/notifications", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ notifications: [], unreadCount: 0 })
+      })
+    );
+    await page.route("**/api/notifications/stream", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: 'data: {"type":"snapshot","notifications":[]}\n\n'
+      })
     );
 
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
 
-    const adminItem = page.getByRole("button", { name: "Access Management" });
+    const adminItem = page.getByRole("button", { name: "User Management" });
     if (role === "Admin") await expect(adminItem).toBeVisible();
     else await expect(adminItem).toHaveCount(0);
 

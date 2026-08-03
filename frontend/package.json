@@ -8,6 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:standalone": "node scripts/start-standalone.mjs",
     "test": "vitest run --maxWorkers=2",
     "test:unit": "vitest run test/*.test.js --maxWorkers=2",
     "test:components": "vitest run --maxWorkers=2",
@@ -16,21 +17,22 @@
     "lint": "eslint app test",
     "check:modules": "node scripts/check-module-size.mjs",
     "check:cycles": "node scripts/check-import-cycles.mjs",
-    "check:architecture": "npm run check:modules && npm run check:cycles",
+    "check:architecture": "npm run check:modules \u0026\u0026 npm run check:cycles",
     "check:css-architecture": "node scripts/check-css-architecture.mjs",
     "check:controls": "node scripts/check-raw-controls.mjs",
-    "check:design-system": "npm run check:controls && npm run check:css-architecture && npm run lint:css",
+    "check:modal-ux": "node scripts/check-modal-ux.mjs",
+    "check:design-system": "npm run check:controls \u0026\u0026 npm run check:css-architecture \u0026\u0026 npm run check:modal-ux \u0026\u0026 npm run lint:css",
     "check:bundle": "node scripts/check-bundle-budget.mjs",
     "check:scale": "node scripts/check-scale-performance.mjs",
-    "check:performance": "npm run check:bundle && npm run check:scale",
+    "check:performance": "npm run check:bundle \u0026\u0026 npm run check:scale",
     "check:secrets": "node scripts/check-secrets.mjs",
     "lint:css": "stylelint \"app/**/*.css\"",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "quality": "npm run lint && npm run check:architecture && npm run check:design-system && npm run check:secrets && npm run format:check && npm test && npm run build && npm run check:performance"
+    "quality": "npm run lint \u0026\u0026 npm run check:architecture \u0026\u0026 npm run check:design-system \u0026\u0026 npm run check:secrets \u0026\u0026 npm run format:check \u0026\u0026 npm test \u0026\u0026 npm run build \u0026\u0026 npm run check:performance"
   },
   "engines": {
-    "node": ">=20"
+    "node": "\u003e=20"
   },
   "dependencies": {
     "@tiptap/pm": "^3.29.2",

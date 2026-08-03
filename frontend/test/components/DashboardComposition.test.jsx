@@ -48,7 +48,7 @@ describe("dashboard entry", () => {
     };
     view.rerender(<BookingDashboard />);
     expect(screen.getByTestId("shell")).toHaveTextContent("Admin");
-    expect(screen.getByTestId("overlays")).toHaveTextContent("Admin");
+    expect(await screen.findByTestId("overlays")).toHaveTextContent("Admin");
   });
 });
 

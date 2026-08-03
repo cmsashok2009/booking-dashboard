@@ -1,0 +1,11 @@
+{
+  "name": "security-scan-bad-package",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "bad-git": "git+https://example.invalid/repo.git"
+  },
+  "devDependencies": {
+    "bad-file": "file:../local-package"
+  }
+}

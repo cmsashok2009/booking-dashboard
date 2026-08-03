@@ -55,7 +55,7 @@ describe("dashboard shell view routing", () => {
     ["email-delivery", "Delivery view"],
     ["email-settings", "Settings view"]
   ]) {
-    it("renders " + view, () => {
+    it("renders " + view, async () => {
       render(
         <DashboardShell
           state={{ ...baseState, activeView: view }}
@@ -64,27 +64,20 @@ describe("dashboard shell view routing", () => {
           overlays={<div>Overlays</div>}
         />
       );
-      expect(screen.getByText(expected)).toBeInTheDocument();
+      expect(await screen.findByText(expected)).toBeInTheDocument();
       expect(screen.getByText("Overlays")).toBeInTheDocument();
     });
   }
 
-
   it("orders Email Management tabs from setup to delivery", () => {
-    render(
-      <DashboardShell
-        state={{ ...baseState, activeView: "email-settings" }}
-        actions={actions}
-        models={models}
-      />
-    );
+    render(<DashboardShell state={{ ...baseState, activeView: "email-settings" }} actions={actions} models={models} />);
     const tabs = screen.getAllByRole("tab");
     expect(tabs.map((tab) => tab.textContent)).toEqual(["Email Setup", "Email Operations", "Email Configuration"]);
     expect(screen.getByRole("tab", { name: "Email Setup" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Email Configuration" })).toHaveAttribute("aria-selected", "true");
     expect(screen.queryByRole("tab", { name: "Delivery Logs" })).not.toBeInTheDocument();
   });
-  it("uses manager dashboard copy and hides admin insights/navigation", () => {
+  it("uses manager dashboard copy and hides admin insights/navigation", async () => {
     render(
       <DashboardShell
         state={{
@@ -97,7 +90,7 @@ describe("dashboard shell view routing", () => {
         models={models}
       />
     );
-    expect(screen.getByText("Reconciliation manager")).toBeInTheDocument();
+    expect(await screen.findByText("Reconciliation manager")).toBeInTheDocument();
     expect(screen.queryByText("Chart Regions")).not.toBeInTheDocument();
     expect(screen.queryByText("User Management")).not.toBeInTheDocument();
   });

@@ -1,15 +1,13 @@
-﻿import { createHash } from "node:crypto";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import mysql from "mysql2/promise";
+import {
+  NormalizedMySqlStateStore,
+  NormalizedPersistenceConflictError as PersistenceConflictError,
+} from "./normalized-state-store.js";
 
-export class PersistenceConflictError extends Error {
-  constructor() {
-    super("Stored data changed while this request was being processed.");
-    this.code = "PERSISTENCE_CONFLICT";
-    this.status = 409;
-  }
-}
+export { PersistenceConflictError };
 
 function digest(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -82,7 +80,7 @@ export class FileStateStore {
   async close() {}
 }
 
-export class MySqlStateStore {
+export class MySqlDocumentStateStore {
   constructor(environment = process.env) {
     const databaseUrl = environment.DATABASE_URL ? new URL(environment.DATABASE_URL) : null;
     this.pool = mysql.createPool({
@@ -147,6 +145,8 @@ export class MySqlStateStore {
     await this.pool.end();
   }
 }
+
+export class MySqlStateStore extends NormalizedMySqlStateStore {}
 
 export function createStateStore({ environment = process.env, filePath }) {
   const driver = String(environment.PERSISTENCE_DRIVER || (environment.NODE_ENV === "production" ? "mysql" : "file")).toLowerCase();

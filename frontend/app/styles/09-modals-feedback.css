@@ -605,6 +605,7 @@ button.password-reveal-button:active {
   width: 100%;
   min-height: 180px;
 }
+
 .table-empty-state {
   position: relative;
   display: grid;

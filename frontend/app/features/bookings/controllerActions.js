@@ -33,9 +33,9 @@ export function createBookingActions(context) {
     setEditingOptionId,
     setOptionDraft,
     selectedAreaField,
-    setBootstrap,
     setAddOptionError,
-    setAddOptionModalOpen
+    setAddOptionModalOpen,
+    setRegionDependencyConflict
   } = context;
   async function changeBookingFilters(patch) {
     const nextFilters = { ...bookingFilters, ...patch };
@@ -160,15 +160,32 @@ export function createBookingActions(context) {
 
   async function updateLookupOption(optionId, patch, successMessage) {
     try {
-      const result = await request(`/api/admin/lookups/${selectedAreaField}/options/${encodeURIComponent(optionId)}`, {
+      const encodedId = encodeURIComponent(optionId);
+      const endpoint =
+        selectedAreaField === "regions"
+          ? `/api/admin/regions/${encodedId}`
+          : selectedAreaField === "dealerCodes"
+            ? `/api/admin/dealer-codes/${encodedId}`
+            : `/api/admin/lookups/${selectedAreaField}/options/${encodedId}`;
+      const payload =
+        selectedAreaField === "regions"
+          ? { name: patch.label, status: patch.status }
+          : selectedAreaField === "dealerCodes"
+            ? { code: patch.label, status: patch.status }
+            : patch;
+      await request(endpoint, {
         method: "PATCH",
-        body: JSON.stringify({ ...patch, updatedBy: user.id })
+        body: JSON.stringify(payload)
       });
-      setBootstrap((current) => ({ ...current, lookups: result.lookups, lookupOptions: result.lookupOptions }));
+      await loadBootstrap();
       setNotice({ message: successMessage, type: "success" });
       setEditingOptionId(null);
       setOptionDraft("");
     } catch (error) {
+      if (error.payload?.code === "REGION_IN_USE") {
+        setRegionDependencyConflict({ regionName: patch.label });
+        return;
+      }
       setNotice({ message: error.payload?.error || error.message, type: "error" });
     }
   }
@@ -179,21 +196,23 @@ export function createBookingActions(context) {
       return;
     }
     try {
-      const endpoint = selectedAreaField === "regions"
-        ? "/api/admin/regions"
-        : selectedAreaField === "dealerCodes"
-          ? "/api/admin/dealer-codes"
-          : `/api/admin/lookups/${selectedAreaField}/options`;
-      const payload = selectedAreaField === "regions" ? { name: value }
-        : selectedAreaField === "dealerCodes" ? { code: value, region: input.region }
-          : { label: value };
-      const result = await request(endpoint, { method: "POST", body: JSON.stringify({ ...payload, updatedBy: user.id }) });
-      setBootstrap((current) => ({
-        ...current,
-        ...result,
-        lookups: result.lookups || current.lookups,
-        lookupOptions: result.lookupOptions || current.lookupOptions
-      }));
+      const endpoint =
+        selectedAreaField === "regions"
+          ? "/api/admin/regions"
+          : selectedAreaField === "dealerCodes"
+            ? "/api/admin/dealer-codes"
+            : `/api/admin/lookups/${selectedAreaField}/options`;
+      const payload =
+        selectedAreaField === "regions"
+          ? { name: value }
+          : selectedAreaField === "dealerCodes"
+            ? { code: value, region: input.region }
+            : { label: value };
+      await request(endpoint, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      await loadBootstrap();
       closeAddOptionModal();
       setNotice({ message: `${lookupFieldLabels[selectedAreaField]} added.`, type: "success" });
     } catch (error) {

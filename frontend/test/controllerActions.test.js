@@ -14,7 +14,7 @@ vi.mock("../app/utils/exportExcel", () => ({
 }));
 
 import { createLoginAction, restoreDashboardSession } from "../app/features/dashboard/sessionActions";
-import { createShellActions } from "../app/features/dashboard/controllerActions";
+import { createNavigationAction, createShellActions } from "../app/features/dashboard/controllerActions";
 import { createUserActions } from "../app/features/users/controllerActions";
 import { createBookingActions } from "../app/features/bookings/controllerActions";
 
@@ -68,11 +68,27 @@ describe("login action", () => {
 });
 
 describe("session restoration", () => {
-  it("clears an expired cached session and returns to sign-in", async () => {
+  it("reconciles stale cached identity with the authoritative server session", async () => {
+    const authoritativeUser = { id: "u2", name: "Area User", role: "Area Manager" };
     window.sessionStorage.setItem(
       "booking-dashboard-user",
-      JSON.stringify({ id: "u1", role: "Admin" })
+      JSON.stringify({ id: "u1", name: "Admin User", role: "Admin" })
     );
+    mocks.request
+      .mockResolvedValueOnce({ currentUser: authoritativeUser })
+      .mockResolvedValueOnce({ rows: [{ id: "b1" }] });
+
+    await expect(restoreDashboardSession()).resolves.toEqual({
+      user: authoritativeUser,
+      bootstrap: { currentUser: authoritativeUser },
+      bookings: [{ id: "b1" }]
+    });
+    expect(JSON.parse(window.sessionStorage.getItem("booking-dashboard-user"))).toEqual(authoritativeUser);
+    expect(mocks.request).toHaveBeenNthCalledWith(2, expect.stringContaining("role=Area+Manager"));
+  });
+
+  it("clears an expired cached session and returns to sign-in", async () => {
+    window.sessionStorage.setItem("booking-dashboard-user", JSON.stringify({ id: "u1", role: "Admin" }));
     mocks.request.mockRejectedValueOnce(Object.assign(new Error("Authentication is required"), { status: 401 }));
 
     await expect(restoreDashboardSession()).resolves.toBeNull();
@@ -95,16 +111,18 @@ describe("user actions", () => {
       ...setters([
         "setUserTable",
         "setUserPage",
-        "setBootstrap",
+        "updateUserRecord",
+        "reloadUsers",
         "setNotice",
         "setSingleUserErrors",
         "loadBootstrap",
+        "updateUserRecord",
         "setSingleUserModalOpen",
         "setOnboardingWorkflowId",
         "setBulkUserModalOpen",
         "setSingleUserRole"
       ]),
-      filteredUsers: [{ id: "u1" }],
+      loadAllUsers: vi.fn().mockResolvedValue([{ id: "u1" }]),
       bootstrap: { roleDefinitions: [] },
       ...overrides
     };
@@ -119,10 +137,10 @@ describe("user actions", () => {
     actions.changeSingleUserRole("Dealer");
     await actions.downloadUsers();
     expect(ctx.setUserPage).toHaveBeenCalledWith(1);
-    expect(mocks.downloadUsersExcel).toHaveBeenCalledWith(ctx.filteredUsers);
+    expect(mocks.downloadUsersExcel).toHaveBeenCalledWith([{ id: "u1" }]);
     expect(ctx.setNotice).toHaveBeenLastCalledWith({ type: "success", message: "1 users downloaded." });
-    const update = ctx.setBootstrap.mock.calls[0][0];
-    expect(update({ users: [{ id: "u1", name: "Old" }, { id: "u2" }] }).users[0].name).toBe("Updated");
+    expect(ctx.updateUserRecord).toHaveBeenCalledWith({ id: "u1", name: "Updated" });
+    expect(ctx.reloadUsers).toHaveBeenCalledOnce();
   });
 
   it("creates a valid user workflow and reports server validation failures", async () => {
@@ -134,13 +152,13 @@ describe("user actions", () => {
     expect(ctx.setOnboardingWorkflowId).toHaveBeenCalledWith("w1");
     expect(ctx.setBulkUserModalOpen).toHaveBeenCalledWith(true);
 
-        mocks.request.mockResolvedValueOnce({ id: "w1", resumed: true });
+    mocks.request.mockResolvedValueOnce({ id: "w1", resumed: true });
     await actions.createSingleUser(values);
     expect(ctx.setNotice).toHaveBeenLastCalledWith({
       message: "Pending onboarding resumed. Continue from the saved invitation step.",
       type: "success"
     });
-mocks.request.mockRejectedValueOnce({
+    mocks.request.mockRejectedValueOnce({
       message: "Rejected",
       payload: { errors: [{ columnName: "Email", errorMessage: "Exists" }] }
     });
@@ -160,6 +178,49 @@ mocks.request.mockRejectedValueOnce({
   });
 });
 
+describe("dashboard navigation action", () => {
+  function context(overrides = {}) {
+    return {
+      detailFilter: "pending",
+      bookingFilters: { search: "Ravi" },
+      ...setters([
+        "setActiveView",
+        "setDetailFilter",
+        "setBookingPage",
+        "setExcelPage",
+        "setNotice",
+        "setBookingUploadModalOpen",
+        "loadBookings"
+      ]),
+      ...overrides
+    };
+  }
+
+  it("resets navigation state and refreshes booking-backed views", async () => {
+    const ctx = context();
+    const navigate = createNavigationAction(ctx);
+    await navigate("dashboard");
+    expect(ctx.setDetailFilter).toHaveBeenCalledWith("all");
+    expect(ctx.setBookingPage).toHaveBeenCalledWith(1);
+    expect(ctx.setExcelPage).toHaveBeenCalledWith(1);
+    expect(ctx.setBookingUploadModalOpen).toHaveBeenCalledWith(false);
+    expect(ctx.loadBookings).toHaveBeenCalledWith(ctx.bookingFilters, "all");
+
+    ctx.loadBookings.mockClear();
+    await navigate("email-templates");
+    expect(ctx.loadBookings).not.toHaveBeenCalled();
+  });
+
+  it("preserves navigation and reports booking refresh failures", async () => {
+    const ctx = context({ loadBookings: vi.fn().mockRejectedValue(new Error("Dependency unavailable")) });
+    await createNavigationAction(ctx)("bookings");
+    expect(ctx.setActiveView).toHaveBeenCalledWith("bookings");
+    expect(ctx.setNotice).toHaveBeenLastCalledWith({
+      type: "error",
+      message: "Dependency unavailable"
+    });
+  });
+});
 describe("dashboard shell actions", () => {
   function context(overrides = {}) {
     return {
@@ -183,7 +244,8 @@ describe("dashboard shell actions", () => {
         "loadBookings",
         "setAbortingWorkflow",
         "setAbortWorkflow",
-        "loadBootstrap"
+        "loadBootstrap",
+        "updateUserRecord"
       ]),
       user: { id: "u1", role: "Admin" },
       bookingFilters: { search: "" },
@@ -210,6 +272,7 @@ describe("dashboard shell actions", () => {
     actions.profilePhotoSaved({ id: "u1", name: "Ravi" });
     expect(ctx.setChangePasswordOpen).toHaveBeenCalledWith(false);
     expect(ctx.setProfilePhotoOpen).toHaveBeenCalledWith(false);
+    expect(ctx.updateUserRecord).toHaveBeenCalledWith({ id: "u1", name: "Ravi" });
     const update = ctx.setBootstrap.mock.calls.at(-1)[0];
     expect(update({ users: [{ id: "u1", name: "Old" }] }).users[0].name).toBe("Ravi");
     expect(update(null)).toBeNull();
@@ -272,6 +335,7 @@ describe("booking actions", () => {
         "setDetailFilter",
         "setBookingSearch",
         "loadBootstrap",
+        "updateUserRecord",
         "setNotice",
         "setUploadPreview",
         "setPendingBookingUpload",
@@ -284,7 +348,8 @@ describe("booking actions", () => {
         "setOptionDraft",
         "setBootstrap",
         "setAddOptionError",
-        "setAddOptionModalOpen"
+        "setAddOptionModalOpen",
+        "setRegionDependencyConflict"
       ]),
       bookingFilters: { search: "", region: "North" },
       detailFilter: "all",
@@ -377,6 +442,57 @@ describe("booking actions", () => {
     expect(ctx.setSelectedBooking).toHaveBeenLastCalledWith(null);
   });
 
+  it.each([
+    [
+      "regions",
+      "/api/admin/regions/region%2F1",
+      { label: "North East", status: "inactive" },
+      { name: "North East", status: "inactive" }
+    ],
+    [
+      "dealerCodes",
+      "/api/admin/dealer-codes/dealer%2F1",
+      { label: "NE-001", status: "active" },
+      { code: "NE-001", status: "active" }
+    ]
+  ])("routes %s edits through its dedicated mutation contract", async (selectedAreaField, endpoint, patch, payload) => {
+    const ctx = context({ selectedAreaField });
+    mocks.request.mockResolvedValueOnce({});
+
+    await createBookingActions(ctx).updateLookupOption(
+      selectedAreaField === "regions" ? "region/1" : "dealer/1",
+      patch,
+      "Saved"
+    );
+
+    expect(mocks.request).toHaveBeenCalledWith(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+    expect(ctx.loadBootstrap).toHaveBeenCalledOnce();
+    expect(ctx.setNotice).toHaveBeenLastCalledWith({ message: "Saved", type: "success" });
+  });
+
+  it("opens a dependency modal instead of a toast when active Dealer Codes block Region deactivation", async () => {
+    const ctx = context({ selectedAreaField: "regions" });
+    mocks.request.mockRejectedValueOnce({
+      payload: {
+        code: "REGION_IN_USE",
+        error: "Deactivate or move the active Dealer Codes assigned to this Region first."
+      }
+    });
+
+    await createBookingActions(ctx).updateLookupOption(
+      "region-1",
+      { label: "North", status: "inactive" },
+      "Region deactivated."
+    );
+
+    expect(ctx.setRegionDependencyConflict).toHaveBeenCalledWith({ regionName: "North" });
+    expect(ctx.setNotice).not.toHaveBeenCalled();
+    expect(ctx.loadBootstrap).not.toHaveBeenCalled();
+  });
+
   it("changes fields and handles lookup create, update, validation, and errors", async () => {
     const ctx = context();
     const actions = createBookingActions(ctx);
@@ -385,10 +501,14 @@ describe("booking actions", () => {
     await actions.addLookupOption("");
     expect(ctx.setAddOptionError).toHaveBeenCalledWith("Option value is required.");
 
-    const result = { lookups: {}, lookupOptions: { bookingCategory: [] } };
-    mocks.request.mockResolvedValueOnce(result).mockResolvedValueOnce(result);
+    mocks.request.mockResolvedValueOnce({ option: { id: "o2" } }).mockResolvedValueOnce({ option: { id: "o1" } });
     await actions.addLookupOption("Priority");
     await actions.updateLookupOption("o1", { active: false }, "Updated");
+    expect(mocks.request).toHaveBeenLastCalledWith("/api/admin/lookups/bookingCategory/options/o1", {
+      method: "PATCH",
+      body: JSON.stringify({ active: false })
+    });
+    expect(ctx.loadBootstrap).toHaveBeenCalledTimes(2);
     expect(ctx.setNotice).toHaveBeenLastCalledWith({ message: "Updated", type: "success" });
 
     mocks.request.mockRejectedValueOnce({ message: "Denied", payload: { error: "Duplicate" } });

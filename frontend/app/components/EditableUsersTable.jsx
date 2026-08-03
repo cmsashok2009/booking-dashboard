@@ -7,11 +7,27 @@ import TextInput from "./ui/TextInput";
 import TableEmptyState from "./ui/TableEmptyState";
 import NotificationToast from "./NotificationToast";
 import AdminTemporaryPasswordDrawer from "./AdminTemporaryPasswordDrawer";
+import UnsavedChangesDialog from "./UnsavedChangesDialog";
 import { displayValue } from "../utils/bookings";
 import { request } from "../utils/api";
-import { editableUserValues, validateEditableUser } from "../features/users/editableUser";
+import {
+  editableUserRegionChange,
+  editableUserServerErrors,
+  editableUserValues,
+  validateEditableUser
+} from "../features/users/editableUser";
+import EditableUserRegionField from "../features/users/EditableUserRegionField";
+import { editableUserField } from "../features/users/editableUserField";
 
-export default function EditableUsersTable({ users, roles, regions, updatedBy, sortState, onSort, onUserUpdated }) {
+export default function EditableUsersTable({
+  users,
+  roles,
+  regions,
+  dealerCodes = [],
+  sortState,
+  onSort,
+  onUserUpdated
+}) {
   const [rows, setRows] = useState(users);
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState(null);
@@ -100,6 +116,11 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
     setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
+  function updateRegion(value) {
+    setDraft((current) => editableUserRegionChange(current, value, dealerCodes));
+    setErrors((current) => ({ ...current, region: undefined, dealerCode: undefined }));
+  }
+
   function discardChanges() {
     setConfirmOpen(false);
     setEditingId(null);
@@ -119,7 +140,7 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
     try {
       const payload = await request("/api/ui/users/update", {
         method: "PATCH",
-        body: JSON.stringify({ userId: editingId, ...draft, updatedBy })
+        body: JSON.stringify({ userId: editingId, ...draft })
       });
       setRows((current) => current.map((row) => (row.id === editingId ? payload.user : row)));
       setEditingId(null);
@@ -128,24 +149,13 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
       setNotice({ type: "success", message: `${payload.user.name} was updated successfully.` });
       onUserUpdated?.(payload.user);
     } catch (error) {
-      const fieldMap = { Name: "name", Email: "email", Role: "role", Region: "region", Status: "status" };
-      setErrors(
-        Object.fromEntries(
-          (error.payload?.errors || []).map((item) => [fieldMap[item.columnName] || item.columnName, item.errorMessage])
-        )
-      );
-      setNotice({ type: "error", message: error.message });
+      const serverErrors = error.payload?.errors || [];
+      setErrors(editableUserServerErrors(serverErrors));
+      setNotice({ type: "error", message: serverErrors[0]?.errorMessage || error.message });
     } finally {
       setSaving(false);
     }
   }
-
-  const field = (key, control) => (
-    <div className="editable-cell-field">
-      {control}
-      {errors[key] ? <span className="field-error">{errors[key]}</span> : null}
-    </div>
-  );
 
   return (
     <>
@@ -183,7 +193,8 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
                   <tr className={editing ? "editing-row" : ""} key={user.id} ref={editing ? rowRef : null}>
                     <td>
                       {editing
-                        ? field(
+                        ? editableUserField(
+                            errors,
                             "name",
                             <TextInput
                               aria-label={`Name for ${user.email}`}
@@ -196,7 +207,8 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
                     </td>
                     <td>
                       {editing
-                        ? field(
+                        ? editableUserField(
+                            errors,
                             "email",
                             <>
                               <TextInput
@@ -219,7 +231,8 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
                     </td>
                     <td>
                       {editing
-                        ? field(
+                        ? editableUserField(
+                            errors,
                             "role",
                             <Select
                               aria-label={`Role for ${user.name}`}
@@ -237,19 +250,19 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
                     </td>
                     <td>
                       {editing
-                        ? field(
+                        ? editableUserField(
+                            errors,
                             "region",
-                            <Select
-                              aria-label={`Region for ${user.name}`}
-                              className={errors.region ? "input-error" : ""}
-                              value={draft.region}
-                              onChange={(event) => updateField("region", event.target.value)}
-                            >
-                              <option value="">Select region</option>
-                              {regions.map((region) => (
-                                <option key={region}>{region}</option>
-                              ))}
-                            </Select>
+                            <EditableUserRegionField
+                              userName={user.name}
+                              region={draft.region}
+                              dealerCode={draft.dealerCode}
+                              regions={regions}
+                              dealerCodes={dealerCodes}
+                              errors={errors}
+                              onRegionChange={updateRegion}
+                              onDealerCodeChange={(value) => updateField("dealerCode", value)}
+                            />
                           )
                         : displayValue(user.region)}
                     </td>
@@ -261,7 +274,8 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
                             <span className="field-hint">Managed by activation workflow</span>
                           </div>
                         ) : (
-                          field(
+                          editableUserField(
+                            errors,
                             "status",
                             <Select
                               aria-label={`Status for ${user.name}`}
@@ -323,36 +337,13 @@ export default function EditableUsersTable({ users, roles, regions, updatedBy, s
         }}
       />
 
-      {confirmOpen ? (
-        <div className="confirm-backdrop" role="presentation">
-          <section
-            className="confirm-dialog"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="discard-title"
-            aria-describedby="discard-description"
-          >
-            <span className="confirm-icon" aria-hidden="true">
-              !
-            </span>
-            <div>
-              <h2 id="discard-title">Discard unsaved changes?</h2>
-              <p id="discard-description">
-                You changed this user but have not saved yet. Discard the changes to leave the row.
-              </p>
-            </div>
-            <div className="confirm-actions">
-              <Button ref={stayButtonRef} type="button" variant="secondary" onClick={() => setConfirmOpen(false)}>
-                Stay Editing
-              </Button>
-              <Button ref={discardButtonRef} type="button" variant="danger" onClick={discardChanges}>
-                Discard Changes
-              </Button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <UnsavedChangesDialog
+        open={confirmOpen}
+        stayButtonRef={stayButtonRef}
+        discardButtonRef={discardButtonRef}
+        onStay={() => setConfirmOpen(false)}
+        onDiscard={discardChanges}
+      />
     </>
   );
 }
-

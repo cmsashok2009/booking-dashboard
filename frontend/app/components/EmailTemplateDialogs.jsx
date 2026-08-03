@@ -68,8 +68,8 @@ export function SampleTemplatePreview({ preview, busy, onClose, onClone }) {
             <pre>{renderSample(preview.bodyText)}</pre>
           </div>
           <p className="preview-safety-note">
-            Sample recipient data is shown here. No activation link or email is created until an onboarding campaign
-            is confirmed.
+            Sample recipient data is shown here. No activation link or email is created until an onboarding campaign is
+            confirmed.
           </p>
         </div>
         <footer className="email-preview-drawer-footer">
@@ -172,7 +172,7 @@ export function TemplateEditor({ editor, setEditor, busy, errors, previewOpen, o
                 value={editor.bodyHtml || ""}
                 onChange={(bodyHtml) => setEditor((current) => ({ ...current, bodyHtml }))}
               />
-              <input type="hidden" name="bodyHtml" value={editor.bodyHtml || ""} />
+              <TextInput type="hidden" name="bodyHtml" value={editor.bodyHtml || ""} />
               <span className="field-hint">
                 Format the email visually and add clickable links. Plain text remains the fallback.
               </span>

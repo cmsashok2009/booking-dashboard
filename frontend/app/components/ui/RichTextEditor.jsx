@@ -5,21 +5,21 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Bold, Italic, Link2, List, ListOrdered, Redo2, Undo2, Unlink } from "lucide-react";
 import Button from "./Button";
+import IconButton from "./IconButton";
 import TextInput from "./TextInput";
 
 function ToolbarButton({ active = false, disabled = false, label, onClick, children }) {
   return (
-    <button
+    <IconButton
       className={`rich-text-toolbar-button${active ? " active" : ""}`}
       type="button"
-      aria-label={label}
-      title={label}
+      label={label}
       aria-pressed={active || undefined}
       disabled={disabled}
       onClick={onClick}
     >
       {children}
-    </button>
+    </IconButton>
   );
 }
 

@@ -47,25 +47,29 @@ export function createLoginAction(context) {
 export async function restoreDashboardSession() {
   const cached = window.sessionStorage.getItem("booking-dashboard-user");
   if (!cached) return null;
-  const user = JSON.parse(cached);
-  if (!user?.id || !user?.role) {
+  const cachedUser = JSON.parse(cached);
+  if (!cachedUser?.id || !cachedUser?.role) {
     window.sessionStorage.removeItem("booking-dashboard-user");
     return null;
   }
 
-  const params = new URLSearchParams({
-    role: user.role,
-    userId: user.id,
-    search: "",
-    region: "",
-    wholesaleInput: "",
-    retailInput: ""
-  });
   try {
-    const [bootstrap, bookingPayload] = await Promise.all([
-      request("/api/bootstrap"),
-      request(`/api/bookings?${params}`)
-    ]);
+    const bootstrap = await request("/api/bootstrap");
+    const user = bootstrap.currentUser;
+    if (!user?.id || !user?.role) {
+      window.sessionStorage.removeItem("booking-dashboard-user");
+      return null;
+    }
+    window.sessionStorage.setItem("booking-dashboard-user", JSON.stringify(user));
+    const params = new URLSearchParams({
+      role: user.role,
+      userId: user.id,
+      search: "",
+      region: "",
+      wholesaleInput: "",
+      retailInput: ""
+    });
+    const bookingPayload = await request(`/api/bookings?${params}`);
     return { user, bootstrap, bookings: bookingPayload.rows };
   } catch (error) {
     if (error?.status === 401) {

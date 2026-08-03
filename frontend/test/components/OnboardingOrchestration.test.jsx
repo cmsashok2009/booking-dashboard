@@ -61,7 +61,7 @@ describe("onboarding orchestration", () => {
     request.mockResolvedValueOnce(workflow).mockResolvedValueOnce({ subject: "Welcome" });
     render(<UserOnboardingWizard open workflowId="w1" user={user} templates={[]} onClose={close} />);
     expect(await screen.findByText("Stepper template")).toBeInTheDocument();
-    expect(request).toHaveBeenCalledWith(expect.stringContaining("/api/admin/onboarding/w1?"));
+    expect(request).toHaveBeenCalledWith("/api/admin/onboarding/w1");
     expect(request).toHaveBeenCalledWith(expect.stringContaining("/preview?templateId=t1"));
     await userEvent.keyboard("{Escape}");
     expect(close).toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe("onboarding orchestration", () => {
       if (url.endsWith("/create")) return Promise.resolve({});
       if (url.endsWith("/cancel")) return Promise.resolve({});
       if (url.includes("/preview?templateId=")) return Promise.resolve({ subject: "Preview" });
-      if (url.includes("/api/admin/onboarding/w1?")) return Promise.resolve(workflow);
+      if (url === "/api/admin/onboarding/w1") return Promise.resolve(workflow);
       return Promise.reject(new Error("Unexpected " + url));
     });
     render(
@@ -100,7 +100,7 @@ describe("onboarding orchestration", () => {
 
   it("confirms recipients and sends the activation campaign", async () => {
     request.mockImplementation((url) => {
-      if (url.includes("/api/admin/onboarding/w1?")) return Promise.resolve(workflow);
+      if (url === "/api/admin/onboarding/w1") return Promise.resolve(workflow);
       if (url.includes("/preview?")) return Promise.resolve({ subject: "Preview" });
       if (url.endsWith("/recipients") || url.endsWith("/send")) return Promise.resolve({});
       return Promise.resolve(workflow);

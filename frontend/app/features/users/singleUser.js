@@ -3,7 +3,10 @@ export function getSingleUserRequirements(role, roleDefinitions = []) {
   return {
     needsRegion: ["Area Manager", "Regional Manager"].includes(role),
     needsManager: Boolean(definition?.managerRoleCode),
-    managerRole: roleDefinitions.find((item) => item.code === definition?.managerRoleCode)?.name
+    managerRole:
+      definition?.code === "AM"
+        ? undefined
+        : roleDefinitions.find((item) => item.code === definition?.managerRoleCode)?.name
   };
 }
 

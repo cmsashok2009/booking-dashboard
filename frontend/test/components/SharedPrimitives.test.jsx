@@ -6,6 +6,7 @@ import DataTable from "../../app/components/ui/DataTable";
 import EmptyState from "../../app/components/ui/EmptyState";
 import Field from "../../app/components/ui/Field";
 import FilterToolbar from "../../app/components/ui/FilterToolbar";
+import GroupedTabs from "../../app/components/ui/GroupedTabs";
 import LinkButton from "../../app/components/ui/LinkButton";
 import LoadingState from "../../app/components/ui/LoadingState";
 import MetricCard from "../../app/components/ui/MetricCard";
@@ -61,6 +62,7 @@ describe("shared primitives", () => {
       </Table>
     );
     expect(screen.getByRole("table", { name: "Bookings" })).toHaveClass("app-table");
+    expect(screen.getByRole("region", { name: "Bookings" })).toHaveAttribute("tabindex", "0");
   });
 
   it("renders empty, loading, panel, metric, and page-header composition", () => {
@@ -120,5 +122,26 @@ describe("shared primitives", () => {
     expect(screen.getByText("Ready").closest(".status-pill")).toHaveClass("active");
     expect(screen.getByRole("combobox", { name: "Region" })).toHaveClass("app-select");
     expect(screen.getByRole("textbox", { name: "Notes" })).toHaveClass("app-textarea", "notes");
+  });
+  it("connects grouped parent tabs to the child tablist", () => {
+    render(
+      <GroupedTabs
+        label="Business Settings"
+        groups={[
+          { id: "access", label: "Access Data", items: [{ value: "roles", label: "Roles" }] },
+          { id: "workflow", label: "Booking Workflow", items: [{ value: "category", label: "Category" }] }
+        ]}
+        value="category"
+        onChange={vi.fn()}
+        controls="settings-panel"
+        idPrefix="business-settings"
+      />
+    );
+    const parentTab = screen.getByRole("tab", { name: "Booking Workflow" });
+    expect(parentTab).toHaveAttribute("aria-controls", "business-settings-children");
+    expect(screen.getByRole("tablist", { name: "Booking Workflow sections" })).toHaveAttribute(
+      "id",
+      "business-settings-children"
+    );
   });
 });

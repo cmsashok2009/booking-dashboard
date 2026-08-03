@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import "../styles/13-email-delivery.css";
+
 import Pagination from "./Pagination";
-import { EmptyState, PageHeader, Select, StatusBadge, Table, TextInput } from "./ui";
-const DELIVERY_PAGE_SIZE = 5;
+import { Button, EmptyState, ErrorState, LoadingState, PageHeader, Select, StatusBadge, Table, TextInput } from "./ui";
 
 function campaignVariant(campaign) {
   if (campaign.failed) return "danger";
@@ -15,89 +15,90 @@ function deliveryRate(campaign) {
   return Math.round(((campaign.sent || 0) / campaign.total) * 100);
 }
 
-export default function EmailDeliveryView({ campaigns = [] }) {
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("all");
-  const [page, setPage] = useState(1);
-  const totalSent = campaigns.reduce((sum, campaign) => sum + (campaign.sent || 0), 0);
-  const totalFailed = campaigns.reduce((sum, campaign) => sum + (campaign.failed || 0), 0);
-
-  const filteredCampaigns = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    return [...campaigns]
-      .filter((campaign) => {
-        if (status === "successful" && campaign.failed) return false;
-        if (status === "failed" && !campaign.failed) return false;
-        if (!normalizedQuery) return true;
-
-        return campaign.recipients?.some((recipient) =>
-          [recipient.name, recipient.email, recipient.provider]
-            .filter(Boolean)
-            .some((value) => value.toLowerCase().includes(normalizedQuery))
-        );
-      })
-      .sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt));
-  }, [campaigns, query, status]);
-
-  const currentPage = Math.min(page, Math.max(1, Math.ceil(filteredCampaigns.length / DELIVERY_PAGE_SIZE)));
-  const visibleCampaigns = filteredCampaigns.slice(
-    (currentPage - 1) * DELIVERY_PAGE_SIZE,
-    currentPage * DELIVERY_PAGE_SIZE
-  );
-
+export default function EmailDeliveryView({
+  campaigns = [],
+  pagination = { total: 0 },
+  summary = { campaigns: 0, sent: 0, failed: 0 },
+  filters = { search: "", status: "all" },
+  page = 1,
+  loading = false,
+  error = "",
+  setPage,
+  updateFilters,
+  reload
+}) {
   function updateQuery(event) {
-    setQuery(event.target.value);
-    setPage(1);
+    updateFilters({ search: event.target.value });
   }
 
   function updateStatus(event) {
-    setStatus(event.target.value);
-    setPage(1);
+    updateFilters({ status: event.target.value });
   }
-
   return (
     <div className="delivery-management">
       <div className="delivery-metrics" aria-label="Delivery summary">
         <div>
           <span>Campaigns</span>
-          <strong>{campaigns.length}</strong>
+          <strong>{summary.campaigns}</strong>
         </div>
         <div>
           <span>Emails sent</span>
-          <strong>{totalSent}</strong>
+          <strong>{summary.sent}</strong>
         </div>
-        <div className={totalFailed ? "has-failures" : ""}>
+        <div className={summary.failed ? "has-failures" : ""}>
           <span>Failed</span>
-          <strong>{totalFailed}</strong>
+          <strong>{summary.failed}</strong>
         </div>
       </div>
-      <section className="email-content-section delivery-log-panel">
+      <section className="email-content-section delivery-log-panel" aria-busy={loading}>
         <PageHeader
           title="Invitation Delivery Log"
           subtitle="Campaign and recipient outcomes from the configured email provider."
         />
-        {campaigns.length ? (
+        {loading && !campaigns.length ? (
+          <LoadingState title="Loading delivery campaigns" description="Retrieving the latest provider outcomes." />
+        ) : error && !campaigns.length ? (
+          <ErrorState title="Delivery campaigns unavailable" description={error} onRetry={reload} showHome={false} />
+        ) : summary.campaigns ? (
           <>
             <div className="delivery-toolbar">
               <label className="delivery-search">
                 <span className="visually-hidden">Search recipients</span>
-                <TextInput type="search" value={query} onChange={updateQuery} placeholder="Search recipient or email" />
+                <TextInput
+                  type="search"
+                  value={filters.search}
+                  onChange={updateQuery}
+                  placeholder="Search recipient or email"
+                />
               </label>
               <label className="delivery-filter">
                 <span>Status</span>
-                <Select value={status} onChange={updateStatus}>
+                <Select value={filters.status} onChange={updateStatus}>
                   <option value="all">All campaigns</option>
                   <option value="successful">Successful</option>
                   <option value="failed">With failures</option>
                 </Select>
               </label>
               <span className="delivery-result-count" aria-live="polite">
-                {filteredCampaigns.length} {filteredCampaigns.length === 1 ? "campaign" : "campaigns"}
+                {pagination.total} {pagination.total === 1 ? "campaign" : "campaigns"}
               </span>
             </div>
 
-            {visibleCampaigns.length ? (
+            {error ? (
+              <div className="inline-status error" role="alert">
+                <span>{error} Existing results remain visible.</span>
+                <Button type="button" variant="secondary" onClick={reload}>
+                  Retry
+                </Button>
+              </div>
+            ) : null}
+            {loading ? (
+              <span className="visually-hidden" aria-live="polite">
+                Refreshing delivery campaigns
+              </span>
+            ) : null}
+
+            {campaigns.length ? (
               <div className="campaign-table">
                 <div className="campaign-table-head" aria-hidden="true">
                   <span>Campaign</span>
@@ -106,7 +107,7 @@ export default function EmailDeliveryView({ campaigns = [] }) {
                   <span>Status</span>
                   <span />
                 </div>
-                {visibleCampaigns.map((campaign) => (
+                {campaigns.map((campaign) => (
                   <details className="campaign-log" key={campaign.id}>
                     <summary>
                       <div className="campaign-identity">
@@ -128,7 +129,7 @@ export default function EmailDeliveryView({ campaigns = [] }) {
                       <span className="campaign-expand" aria-hidden="true" />
                     </summary>
                     <div className="campaign-recipients">
-                      <Table>
+                      <Table aria-label="Campaign recipient delivery outcomes">
                         <thead>
                           <tr>
                             <th>Recipient</th>
@@ -167,13 +168,8 @@ export default function EmailDeliveryView({ campaigns = [] }) {
               />
             )}
 
-            {filteredCampaigns.length > DELIVERY_PAGE_SIZE ? (
-              <Pagination
-                page={currentPage}
-                pageSize={DELIVERY_PAGE_SIZE}
-                totalRows={filteredCampaigns.length}
-                onPageChange={setPage}
-              />
+            {pagination.total > 5 ? (
+              <Pagination page={page} pageSize={5} totalRows={pagination.total} onPageChange={setPage} />
             ) : null}
           </>
         ) : (

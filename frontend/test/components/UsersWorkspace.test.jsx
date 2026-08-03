@@ -12,6 +12,7 @@ function props(overrides = {}) {
     user: admin,
     users: [admin, dealer],
     filteredUsers: [dealer],
+    totalUsers: 1,
     filters: { search: "", role: "", status: "", region: "", sortKey: "name", sortDir: "asc" },
     page: 1,
     roles: ["Dealer"],
@@ -27,6 +28,7 @@ function props(overrides = {}) {
     onSort: vi.fn(),
     onUserUpdated: vi.fn(),
     onPageChange: vi.fn(),
+    onRetry: vi.fn(),
     ...overrides
   };
 }
@@ -81,5 +83,16 @@ describe("users workspace", () => {
     expect(screen.queryByText("Onboarding in progress")).not.toBeInTheDocument();
     expect(screen.getByText("No users match the current filters.")).toBeInTheDocument();
     expect(screen.getByText("0 users match the current view.")).toBeInTheDocument();
+  });
+  it("shows loading and recoverable user collection failures", async () => {
+    const values = props({ loading: true });
+    const { rerender } = render(<UsersWorkspace {...values} />);
+    expect(screen.getByRole("heading", { name: "Loading users" })).toBeInTheDocument();
+    expect(screen.queryByText("Ravi")).not.toBeInTheDocument();
+
+    rerender(<UsersWorkspace {...values} loading={false} error="Dependency unavailable" />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Dependency unavailable");
+    await userEvent.click(screen.getByRole("button", { name: "Retry users" }));
+    expect(values.onRetry).toHaveBeenCalledOnce();
   });
 });

@@ -3,6 +3,36 @@ import { request } from "../../utils/api";
 
 const EMPTY_BOOKING_FILTERS = { search: "", region: "", wholesaleInput: "", retailInput: "" };
 
+export function createNavigationAction({
+  detailFilter,
+  bookingFilters,
+  setActiveView,
+  setDetailFilter,
+  setBookingPage,
+  setExcelPage,
+  setNotice,
+  setBookingUploadModalOpen,
+  loadBookings
+}) {
+  return async function navigate(view) {
+    const nextDetail = ["dashboard", "bookings"].includes(view) ? "all" : detailFilter;
+    setActiveView(view);
+    setDetailFilter(nextDetail);
+    setBookingPage(1);
+    setExcelPage(1);
+    setNotice(null);
+    if (view !== "bookings") setBookingUploadModalOpen(false);
+    if (!["dashboard", "bookings"].includes(view)) return;
+    try {
+      await loadBookings(bookingFilters, nextDetail);
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error.message || "Bookings could not be refreshed. Your current view has been preserved."
+      });
+    }
+  };
+}
 export function createShellActions(context) {
   const {
     setUser,
@@ -13,6 +43,7 @@ export function createShellActions(context) {
     setBookingSearch,
     setNotice,
     setNotifications,
+    setNotificationCount,
     setNotificationDrawerOpen,
     setBookingUploadModalOpen,
     setBookingWorkspaceView,
@@ -28,7 +59,8 @@ export function createShellActions(context) {
     setAbortingWorkflow,
     abortWorkflow,
     loadBootstrap,
-    setAbortWorkflow
+    setAbortWorkflow,
+    updateUserRecord
   } = context;
   async function logout() {
     try {
@@ -45,6 +77,7 @@ export function createShellActions(context) {
     setBookingSearch("");
     setNotice(null);
     setNotifications([]);
+    setNotificationCount?.(0);
     setNotificationDrawerOpen(false);
     setBookingUploadModalOpen(false);
     setBookingWorkspaceView("workflow");
@@ -57,11 +90,13 @@ export function createShellActions(context) {
     setBootstrap(null);
     setBookings([]);
     setNotifications([]);
+    setNotificationCount?.(0);
     setNotice({ type: "success", message: "Password changed successfully. Sign in with your new password." });
   }
 
   function profilePhotoSaved(updatedUser) {
     setUser(updatedUser);
+    updateUserRecord?.(updatedUser);
     setBootstrap((current) =>
       current
         ? { ...current, users: current.users.map((item) => (item.id === updatedUser.id ? updatedUser : item)) }
@@ -74,13 +109,12 @@ export function createShellActions(context) {
 
   async function openNotification(notification) {
     try {
-      const access = new URLSearchParams({ role: user.role, userId: user.id });
-      const payload = await request(`/api/bookings/${encodeURIComponent(notification.bookingId)}?${access}`);
-      await request(`/api/notifications/${encodeURIComponent(notification.id)}/read`, {
-        method: "PATCH",
-        body: JSON.stringify({ userId: user.id })
+      const payload = await request(`/api/bookings/${encodeURIComponent(notification.bookingId)}`);
+      const readResult = await request(`/api/notifications/${encodeURIComponent(notification.id)}/read`, {
+        method: "PATCH"
       });
       setNotifications((current) => current.filter((item) => item.id !== notification.id));
+      setNotificationCount?.(Number(readResult.unreadCount || 0));
       setBookings((current) => {
         const existing = current.some((booking) => booking.id === payload.booking.id);
         return existing
@@ -116,7 +150,9 @@ export function createShellActions(context) {
   async function confirmAbortWorkflow() {
     setAbortingWorkflow(true);
     try {
-      const result = await request(`/api/admin/onboarding/${encodeURIComponent(abortWorkflow.id)}/cancel`, { method: "POST" });
+      const result = await request(`/api/admin/onboarding/${encodeURIComponent(abortWorkflow.id)}/cancel`, {
+        method: "POST"
+      });
       setAbortWorkflow(null);
       const removed = result.removedUserCount || 0;
       setNotice({

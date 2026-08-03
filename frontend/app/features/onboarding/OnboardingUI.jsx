@@ -69,7 +69,6 @@ export function TemplateQuickEditor({ template, user, onClose, onSaved, setNotic
     }
   }
 
-
   return (
     <SideDrawer
       className="template-quick-editor-drawer"
@@ -78,82 +77,85 @@ export function TemplateQuickEditor({ template, user, onClose, onSaved, setNotic
       closeDisabled={saving}
       onClose={saveAndClose}
     >
-        <header className="modal-header">
-          <div>
-            <span className="modal-eyebrow">Activation template</span>
-            <h2 id="quick-template-editor-title">Edit selected template</h2>
-            <p>Changes are validated, saved on close, and reflected in the preview automatically.</p>
-          </div>
-          <CloseButton
-            className="modal-close-button"
-            type="button"
-            disabled={saving}
-            onClick={saveAndClose}
-            aria-label="Save and close template editor"
-          />
-        </header>
-        <div className="template-quick-editor-body">
-          <div className="template-editor-fields">
-            <div className="field">
-              <label htmlFor="quick-template-name">
-                Template name <span className="required-marker">*</span>
-              </label>
-              <TextInput
-                id="quick-template-name"
-                value={draft.name || ""}
-                onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="quick-template-subject">
-                Email subject <span className="required-marker">*</span>
-              </label>
-              <TextInput
-                id="quick-template-subject"
-                value={draft.subject || ""}
-                onChange={(event) => setDraft((value) => ({ ...value, subject: event.target.value }))}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="quick-template-text">
-                Plain-text message <span className="required-marker">*</span>
-              </label>
-              <TextArea
-                id="quick-template-text"
-                rows="9"
-                value={draft.bodyText || ""}
-                onChange={(event) => setDraft((value) => ({ ...value, bodyText: event.target.value }))}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="quick-template-html">HTML message</label>
-              <RichTextEditor
-                id="quick-template-html"
-                ariaLabel="HTML message"
-                value={draft.bodyHtml || ""}
-                onChange={(bodyHtml) => setDraft((value) => ({ ...value, bodyHtml }))}
-              />
-              <span className="field-hint">Use the visual editor for formatting and clickable links. Plain text remains the fallback for email clients that cannot display HTML.</span>
-            </div>
-            {errors.length ? (
-              <div className="template-errors" role="alert">
-                <strong>Review the template</strong>
-                <ul>
-                  {errors.map((error, index) => (
-                    <li key={`${error.field}-${index}`}>{error.message}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
+      <header className="modal-header">
+        <div>
+          <span className="modal-eyebrow">Activation template</span>
+          <h2 id="quick-template-editor-title">Edit selected template</h2>
+          <p>Changes are validated, saved on close, and reflected in the preview automatically.</p>
         </div>
-        <footer className="modal-form-actions template-quick-editor-footer">
-          <span>{dirty ? "Unsaved changes" : "No changes"}</span>
-          <Button type="button" disabled={saving} onClick={saveAndClose}>
-            {saving ? "Saving..." : "Done"}
-          </Button>
-        </footer>
-          </SideDrawer>
+        <CloseButton
+          className="modal-close-button"
+          type="button"
+          disabled={saving}
+          onClick={saveAndClose}
+          aria-label="Save and close template editor"
+        />
+      </header>
+      <div className="template-quick-editor-body">
+        <div className="template-editor-fields">
+          <div className="field">
+            <label htmlFor="quick-template-name">
+              Template name <span className="required-marker">*</span>
+            </label>
+            <TextInput
+              id="quick-template-name"
+              value={draft.name || ""}
+              onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="quick-template-subject">
+              Email subject <span className="required-marker">*</span>
+            </label>
+            <TextInput
+              id="quick-template-subject"
+              value={draft.subject || ""}
+              onChange={(event) => setDraft((value) => ({ ...value, subject: event.target.value }))}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="quick-template-text">
+              Plain-text message <span className="required-marker">*</span>
+            </label>
+            <TextArea
+              id="quick-template-text"
+              rows="9"
+              value={draft.bodyText || ""}
+              onChange={(event) => setDraft((value) => ({ ...value, bodyText: event.target.value }))}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="quick-template-html">HTML message</label>
+            <RichTextEditor
+              id="quick-template-html"
+              ariaLabel="HTML message"
+              value={draft.bodyHtml || ""}
+              onChange={(bodyHtml) => setDraft((value) => ({ ...value, bodyHtml }))}
+            />
+            <span className="field-hint">
+              Use the visual editor for formatting and clickable links. Plain text remains the fallback for email
+              clients that cannot display HTML.
+            </span>
+          </div>
+          {errors.length ? (
+            <div className="template-errors" role="alert">
+              <strong>Review the template</strong>
+              <ul>
+                {errors.map((error, index) => (
+                  <li key={`${error.field}-${index}`}>{error.message}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      <footer className="modal-form-actions template-quick-editor-footer">
+        <span>{dirty ? "Unsaved changes" : "No changes"}</span>
+        <Button type="button" disabled={saving} onClick={saveAndClose}>
+          {saving ? "Saving..." : "Done"}
+        </Button>
+      </footer>
+    </SideDrawer>
   );
 }
 

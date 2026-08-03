@@ -42,7 +42,7 @@ export default function UserOnboardingWizard({
       return;
     }
     setBusy(true);
-    request(`/api/admin/onboarding/${encodeURIComponent(workflowId)}?userId=${encodeURIComponent(user.id)}`)
+    request(`/api/admin/onboarding/${encodeURIComponent(workflowId)}`)
       .then(async (result) => {
         setWorkflow(result);
         const templateId = result.selectedTemplateId || preferredTemplateId || "";
@@ -50,16 +50,13 @@ export default function UserOnboardingWizard({
         setExcluded(result.excludedRecipientIds || []);
         if (templateId && result.currentStep === "template") {
           setPreview(
-            await request(
-              `/api/admin/onboarding/${result.id}/preview?templateId=${encodeURIComponent(templateId)}&userId=${encodeURIComponent(user.id)}`
-            )
+            await request(`/api/admin/onboarding/${result.id}/preview?templateId=${encodeURIComponent(templateId)}`)
           );
         }
       })
       .catch((nextError) => setError(nextError.message))
       .finally(() => setBusy(false));
   }, [open, preferredTemplateId, user.id, workflowId]);
-
 
   const activeTemplates = useMemo(
     () => templates.filter((template) => template.status === "active" && template.type === "user_activation"),
@@ -73,7 +70,6 @@ export default function UserOnboardingWizard({
   async function validateUpload(formData) {
     setBusy(true);
     setError("");
-    formData.set("actorId", user.id);
     try {
       const payload = await request("/api/ui/users/import", { method: "POST", body: formData });
       setWorkflow(payload);
@@ -91,9 +87,9 @@ export default function UserOnboardingWizard({
     try {
       await request(`/api/admin/onboarding/${workflow.id}/${path}`, {
         method: "POST",
-        body: JSON.stringify({ ...body, actorId: user.id })
+        body: JSON.stringify(body)
       });
-      const refreshed = await request(`/api/admin/onboarding/${workflow.id}?userId=${encodeURIComponent(user.id)}`);
+      const refreshed = await request(`/api/admin/onboarding/${workflow.id}`);
       setWorkflow(refreshed);
       onUpdated?.(refreshed);
       return refreshed;
@@ -111,7 +107,7 @@ export default function UserOnboardingWizard({
     try {
       await request(`/api/admin/onboarding/${workflow.id}/cancel`, {
         method: "POST",
-        body: JSON.stringify({ actorId: user.id })
+        body: JSON.stringify({})
       });
       await onUpdated?.();
       onClose();
@@ -128,9 +124,7 @@ export default function UserOnboardingWizard({
     setError("");
     try {
       setPreview(
-        await request(
-          `/api/admin/onboarding/${workflow.id}/preview?templateId=${encodeURIComponent(templateId)}&userId=${encodeURIComponent(user.id)}`
-        )
+        await request(`/api/admin/onboarding/${workflow.id}/preview?templateId=${encodeURIComponent(templateId)}`)
       );
     } catch (nextError) {
       setError(nextError.message);
@@ -143,9 +137,7 @@ export default function UserOnboardingWizard({
     await onUpdated?.();
     setSelectedTemplateId(saved.id);
     setPreview(
-      await request(
-        `/api/admin/onboarding/${workflow.id}/preview?templateId=${encodeURIComponent(saved.id)}&userId=${encodeURIComponent(user.id)}`
-      )
+      await request(`/api/admin/onboarding/${workflow.id}/preview?templateId=${encodeURIComponent(saved.id)}`)
     );
     setEditingTemplate(null);
   }

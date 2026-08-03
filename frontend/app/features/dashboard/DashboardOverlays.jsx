@@ -1,6 +1,7 @@
 "use client";
 
 import AddLookupOptionModal from "../bookings/AddLookupOptionModal";
+import { BlockingDependencyModal } from "../../components/ui";
 import { BookingDetailsDrawer, BookingImportModal } from "../bookings";
 import { SingleUserModal } from "../users";
 import ChangePasswordModal from "../../components/ChangePasswordModal";
@@ -70,8 +71,26 @@ export default function DashboardOverlays({ state, actions }) {
       <NotificationDrawer
         open={state.notificationDrawerOpen}
         notifications={state.notifications}
+        unreadCount={state.notificationCount}
+        pagination={state.notificationCollection?.pagination}
+        loading={state.notificationCollection?.loading}
+        loadingMore={state.notificationCollection?.loadingMore}
+        error={state.notificationCollection?.error}
+        onRetry={actions.retryNotifications}
+        onLoadMore={actions.loadMoreNotifications}
         onClose={actions.closeNotifications}
         onOpenNotification={actions.openNotification}
+      />
+      <BlockingDependencyModal
+        open={Boolean(state.regionDependencyConflict)}
+        eyebrow="Region dependency"
+        title="Region cannot be deactivated"
+        description="This Region still has active Dealer Codes. Review those assignments, then deactivate or move each active Dealer Code before trying again."
+        detailLabel="Region"
+        detailValue={state.regionDependencyConflict?.regionName}
+        actionLabel="View Dealer Codes"
+        onClose={actions.closeRegionDependencyConflict}
+        onAction={actions.viewRegionDealerCodes}
       />
       <ConfirmationModal
         open={Boolean(state.abortWorkflow)}

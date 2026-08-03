@@ -1,3 +1,4 @@
+export { default as BlockingDependencyModal } from "./BlockingDependencyModal";
 export { default as Button } from "./Button";
 export { default as Checkbox } from "./Checkbox";
 export { default as CloseButton } from "./CloseButton";

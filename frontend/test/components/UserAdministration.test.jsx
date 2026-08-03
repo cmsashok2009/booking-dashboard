@@ -47,9 +47,10 @@ describe("single-user modal", () => {
   }
 
   it("renders role requirements, clears errors, and submits mapped values", async () => {
-    const values = props({ errors: { Name: "Required", "Reporting Manager Email": "Manager required" } });
+    const values = props({ errors: { Name: "Required" } });
     render(<SingleUserModal {...values} />);
     expect(screen.getByText("Required")).toHaveAttribute("id", "single-user-Name-error");
+    expect(screen.getByText("Enter an active reporting manager account email.")).toBeInTheDocument();
     await userEvent.type(screen.getByRole("textbox", { name: "Name" }), "Ravi");
     await userEvent.type(screen.getByRole("textbox", { name: "Email" }), "ravi@example.com");
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Region" }), "North");
@@ -61,18 +62,38 @@ describe("single-user modal", () => {
     expect(values.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ Name: "Ravi", Email: "ravi@example.com" }));
   });
 
+  it("keeps phone input numeric and blocks values shorter than 10 digits", async () => {
+    const values = props({ role: "Admin" });
+    render(<SingleUserModal {...values} />);
+    const phone = screen.getByRole("textbox", { name: "Phone" });
+
+    await userEvent.type(phone, "12ab3456789012");
+    expect(phone).toHaveValue("1234567890");
+    expect(phone).toHaveAttribute("inputmode", "numeric");
+
+    await userEvent.clear(phone);
+    await userEvent.type(phone, "12345");
+    await userEvent.click(screen.getByRole("button", { name: "Continue to invitation" }));
+    expect(screen.getByText("Phone must contain exactly 10 digits.")).toBeInTheDocument();
+    expect(values.onSubmit).not.toHaveBeenCalled();
+  });
   it("submits safe defaults for roles without region or manager requirements", async () => {
     const values = props({ role: "Admin" });
     render(<SingleUserModal {...values} />);
     expect(screen.queryByRole("combobox", { name: "Region" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "Reporting Manager Email" })).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Dealer Code" }).closest(".field")).toHaveClass(
+      "single-user-dealer-field"
+    );
     await userEvent.type(screen.getByRole("textbox", { name: "Name" }), "Admin Two");
     await userEvent.type(screen.getByRole("textbox", { name: "Email" }), "admin.two@example.com");
     await userEvent.click(screen.getByRole("button", { name: "Continue to invitation" }));
-    expect(values.onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-      Region: "All",
-      "Reporting Manager Email": ""
-    }));
+    expect(values.onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        Region: "All",
+        "Reporting Manager Email": ""
+      })
+    );
   });
   it("links a selected Dealer Code to its Region", async () => {
     const values = props({
@@ -94,7 +115,10 @@ describe("single-user modal", () => {
     await userEvent.click(screen.getByRole("button", { name: "Add Dealer Code" }));
     await userEvent.click(screen.getByRole("button", { name: "Add Region" }));
 
-    request.mockResolvedValueOnce({ region: { id: "r2", name: "North East", status: "active" }, regions: ["North East"] });
+    request.mockResolvedValueOnce({
+      region: { id: "r2", name: "North East", status: "active" },
+      collectionUrl: "/api/admin/reference-data?collection=regions"
+    });
     await userEvent.type(screen.getByRole("textbox", { name: "Region name" }), "North East");
     await userEvent.click(screen.getByRole("button", { name: "Add and select Region" }));
 
@@ -106,14 +130,20 @@ describe("single-user modal", () => {
     render(<SingleUserModal {...values} />);
     await userEvent.type(screen.getByRole("textbox", { name: "Name" }), "Preserved User");
     await userEvent.click(screen.getByRole("button", { name: "Add Region" }));
-    request.mockResolvedValueOnce({ region: { id: "r2", name: "North East", status: "active" }, regions: ["North", "North East"] });
+    request.mockResolvedValueOnce({
+      region: { id: "r2", name: "North East", status: "active" },
+      collectionUrl: "/api/admin/reference-data?collection=regions"
+    });
     await userEvent.type(screen.getByRole("textbox", { name: "Region name" }), "North East");
     await userEvent.click(screen.getByRole("button", { name: "Add and select Region" }));
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Preserved User");
     expect(screen.getByRole("combobox", { name: "Region" })).toHaveValue("North East");
 
     await userEvent.click(screen.getByRole("button", { name: "Add Dealer Code" }));
-    request.mockResolvedValueOnce({ dealerCode: { id: "d1", code: "NE-001", region: "North East", status: "active" }, dealerCodes: [{ id: "d1", code: "NE-001", region: "North East", status: "active" }] });
+    request.mockResolvedValueOnce({
+      dealerCode: { id: "d1", code: "NE-001", region: "North East", status: "active" },
+      collectionUrl: "/api/admin/reference-data?collection=dealerCodes"
+    });
     await userEvent.type(screen.getByRole("textbox", { name: "Dealer Code" }), "NE-001");
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Region" }), "North East");
     await userEvent.click(screen.getByRole("button", { name: "Add and select Dealer Code" }));
@@ -129,6 +159,10 @@ describe("editable users table", () => {
       users: [user],
       roles: ["Dealer", "Area Manager"],
       regions: ["North", "South"],
+      dealerCodes: [
+        { id: "d1", code: "D1", region: "North", status: "active" },
+        { id: "d2", code: "S1", region: "South", status: "active" }
+      ],
       updatedBy: "admin",
       sortState: { key: "name", direction: "asc" },
       onSort: vi.fn(),
@@ -154,9 +188,14 @@ describe("editable users table", () => {
     await userEvent.clear(name);
     await userEvent.type(name, "Ravi Kumar");
     await userEvent.selectOptions(screen.getByLabelText("Region for Ravi"), "South");
+    expect(screen.getByLabelText("Dealer Code for Ravi")).toHaveValue("");
+    expect(screen.getByText("Changing Region clears an incompatible Dealer Code.")).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText("Status for Ravi"), "inactive");
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(request).toHaveBeenCalledWith("/api/ui/users/update", expect.objectContaining({ method: "PATCH" }));
+    expect(request).toHaveBeenCalledWith(
+      "/api/ui/users/update",
+      expect.objectContaining({ method: "PATCH", body: expect.stringContaining('"dealerCode":""') })
+    );
     expect(values.onUserUpdated).toHaveBeenCalledWith(expect.objectContaining({ name: "Ravi Kumar" }));
     expect(await screen.findByText(/updated successfully/i)).toBeInTheDocument();
   });
@@ -171,14 +210,14 @@ describe("editable users table", () => {
     unmount();
 
     request.mockRejectedValueOnce({
-      message: "Rejected",
+      message: "The request could not be completed.",
       payload: { errors: [{ columnName: "Email", errorMessage: "Already exists" }] }
     });
     renderTable();
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(screen.getByText("Already exists")).toBeInTheDocument();
-    expect(await screen.findByText("Rejected")).toBeInTheDocument();
+    expect(await screen.findByText("Already exists")).toBeInTheDocument();
   });
 
   it("prompts before discarding dirty edits and supports stay, Escape, and discard", async () => {
@@ -212,7 +251,10 @@ describe("editable users table", () => {
     await userEvent.type(screen.getByLabelText(/Confirm password/), "TemporaryPass123");
     request.mockResolvedValueOnce({ updated: true, mustChangePassword: true });
     await userEvent.click(screen.getByRole("button", { name: "Set temporary password" }));
-    expect(request).toHaveBeenCalledWith("/api/admin/users/u1/temporary-password", expect.objectContaining({ method: "POST" }));
+    expect(request).toHaveBeenCalledWith(
+      "/api/admin/users/u1/temporary-password",
+      expect.objectContaining({ method: "POST" })
+    );
     expect(await screen.findByText("Temporary password updated")).toBeInTheDocument();
     expect(screen.getByText(/Existing sessions and password reset links have been revoked/i)).toBeInTheDocument();
   });
@@ -243,6 +285,3 @@ describe("editable users table", () => {
     expect(await screen.findByText("Account activated")).toBeInTheDocument();
   });
 });
-
-
-

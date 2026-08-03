@@ -12,8 +12,16 @@ const ACCESS_FIELDS = ["roles", "regions", "dealerCodes"];
 const WORKFLOW_FIELDS = ["bookingCategory", "wholesalesFeedback", "wsPlanning", "cancellationReason"];
 
 const BUSINESS_SETTING_GROUPS = [
-  { id: "access", label: "Access Data", items: ACCESS_FIELDS.map((value) => ({ value, label: lookupFieldLabels[value] })) },
-  { id: "workflow", label: "Booking Workflow", items: WORKFLOW_FIELDS.map((value) => ({ value, label: lookupFieldLabels[value] })) }
+  {
+    id: "access",
+    label: "Access Data",
+    items: ACCESS_FIELDS.map((value) => ({ value, label: lookupFieldLabels[value] }))
+  },
+  {
+    id: "workflow",
+    label: "Booking Workflow",
+    items: WORKFLOW_FIELDS.map((value) => ({ value, label: lookupFieldLabels[value] }))
+  }
 ];
 
 const ROLE_SCOPES = {
@@ -70,7 +78,9 @@ export default function AreaFieldsWorkspace({
             </p>
           </div>
           <div className="reference-data-actions">
-            <small>{filteredOptions.length} of {options.length} options</small>
+            <small>
+              {filteredOptions.length} of {options.length} options
+            </small>
             {!isRoles ? (
               <Button className="action-with-icon" type="button" onClick={onOpenAdd}>
                 <span aria-hidden="true">+</span>
@@ -185,8 +195,12 @@ export default function AreaFieldsWorkspace({
                                   onClick={() =>
                                     onUpdateOption(
                                       option.id,
-                                      { label: option.label, status: option.status === "active" ? "inactive" : "active" },
-                                      fieldLabel + " option " +
+                                      {
+                                        label: option.label,
+                                        status: option.status === "active" ? "inactive" : "active"
+                                      },
+                                      fieldLabel +
+                                        " option " +
                                         (option.status === "active" ? "deactivated." : "reactivated.")
                                     )
                                   }

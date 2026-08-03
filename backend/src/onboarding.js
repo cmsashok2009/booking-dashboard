@@ -1,6 +1,6 @@
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { activeRoleNames, validateSingleUser } from "./validators.js";
-import { deliverEmail, verifyEmailTransport } from "./mailer.js";
+import { deliverEmailWithPolicy, verifyEmailTransport } from "./mailer.js";
 import { ensureGoogleEmailData } from "./google-email-provider.js";
 
 export const ACTIVATION_TOKENS = ["user_name", "login_email", "activation_link", "activation_expiry", "login_url", "role", "region", "reporting_manager", "support_email"];
@@ -209,6 +209,25 @@ export function importOnboardingUsers(db, workflowId, actorId = "u-admin") {
 export function listOnboardingWorkflows(db, actorId) {
   return db.onboardingWorkflows.filter((item) => !actorId || item.ownerUserId === actorId).map((item) => ({ ...item, rows: undefined }));
 }
+export function ownedOnboardingWorkflow(db, workflowId, actorId) {
+  const workflow = db.onboardingWorkflows.find((item) => item.id === workflowId);
+  if (!workflow) return { error: "Onboarding workflow not found", status: 404 };
+  if (workflow.ownerUserId !== actorId) return { error: "This workflow is owned by another Admin", status: 409 };
+  return workflow;
+}
+
+export function updateWorkflowRecipients(db, workflowId, excludedRecipientIds, actorId) {
+  const workflow = ownedOnboardingWorkflow(db, workflowId, actorId);
+  if (workflow.error) return workflow;
+  const eligibleIds = new Set(workflow.createdUserIds || []);
+  workflow.excludedRecipientIds = [...new Set(
+    (Array.isArray(excludedRecipientIds) ? excludedRecipientIds : []).filter((userId) => eligibleIds.has(userId)),
+  )];
+  workflow.currentStep = "recipients";
+  workflow.updatedAt = new Date().toISOString();
+  workflow.version += 1;
+  return workflow;
+}
 
 export function cancelOnboardingWorkflow(db, workflowId, actorId = "u-admin") {
   const workflow = db.onboardingWorkflows.find((item) => item.id === workflowId);
@@ -342,7 +361,7 @@ export function verifyPassword(password, stored) {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
-export async function sendInvitationCampaign(db, workflowId, actorId = "u-admin", appUrl = "http://localhost:3000") {
+export async function sendInvitationCampaign(db, workflowId, actorId = "u-admin", appUrl = "http://localhost:3000", { deliver = deliverEmailWithPolicy } = {}) {
   const workflow = db.onboardingWorkflows.find((item) => item.id === workflowId);
   if (!workflow) return { error: "Onboarding workflow not found", status: 404 };
   if (workflow.campaignId) return db.emailCampaigns.find((item) => item.id === workflow.campaignId);
@@ -369,15 +388,21 @@ export async function sendInvitationCampaign(db, workflowId, actorId = "u-admin"
   for (const user of recipients) {
     for (const existing of db.activationTokens.filter((item) => item.userId === user.id && !item.usedAt && !item.revokedAt)) existing.revokedAt = now.toISOString();
     const rawToken = randomBytes(32).toString("base64url");
-    db.activationTokens.push({ id: id("activation"), userId: user.id, tokenDigest: tokenDigest(rawToken), expiresAt, usedAt: "", revokedAt: "", createdAt: now.toISOString() });
+    const activation = { id: id("activation"), userId: user.id, tokenDigest: tokenDigest(rawToken), expiresAt, usedAt: "", revokedAt: "", createdAt: now.toISOString() };
+    db.activationTokens.push(activation);
     const manager = db.users.find((item) => normalizeEmail(item.email) === normalizeEmail(user.reportingManagerEmail));
     const values = { user_name: user.name, login_email: user.email, activation_link: `${appUrl}/activate#token=${rawToken}`, activation_expiry: new Date(expiresAt).toLocaleString("en-IN"), login_url: `${appUrl}/`, role: user.role, region: user.region || "All", reporting_manager: manager?.name || "NA", support_email: process.env.SUPPORT_EMAIL || "support@example.com" };
     const rendered = renderTemplate(template, values);
     const attemptedAt = new Date().toISOString();
-    const recipient = { id: id("recipient"), userId: user.id, email: user.email, name: user.name, status: "pending", provider: "", providerReference: "", renderedSubject: rendered.subject, attemptedAt, sentAt: "", failureReason: "" };
+    const recipient = { id: id("recipient"), userId: user.id, email: user.email, name: user.name, idempotencyKey: `recipient:${campaign.id}:${user.id}`, status: "pending", provider: "", providerReference: "", renderedSubject: rendered.subject, attemptCount: 0, attemptedAt, sentAt: "", nextAttemptAt: "", failureReason: "" };
+    activation.recipientId = recipient.id;
     campaign.recipients.push(recipient);
     try {
-      const delivery = await deliverEmail({ to: user.email, subject: rendered.subject, text: rendered.bodyText, html: rendered.bodyHtml }, { db });
+      const delivery = await deliver({ to: user.email, subject: rendered.subject, text: rendered.bodyText, html: rendered.bodyHtml }, { db });
+      recipient.attemptCount = delivery.attemptCount || 1;
+      for (const retry of delivery.retryEvents || []) {
+        db.emailDeliveryEvents.unshift({ id: id("delivery"), campaignId: campaign.id, recipientId: recipient.id, userId: user.id, eventType: "retry_scheduled", provider: delivery.provider || String(process.env.EMAIL_TRANSPORT || "mock"), failureReason: retry.code, attempt: retry.attempt, delayMs: retry.delayMs, createdAt: recipient.attemptedAt });
+      }
       recipient.status = "sent";
       recipient.provider = delivery.provider;
       recipient.providerReference = delivery.reference;
@@ -390,6 +415,10 @@ export async function sendInvitationCampaign(db, workflowId, actorId = "u-admin"
       recipient.status = "failed";
       recipient.provider = String(process.env.EMAIL_TRANSPORT || "mock");
       recipient.failureReason = error.code || "EMAIL_DELIVERY_FAILED";
+      recipient.attemptCount = error.attemptCount || 1;
+      for (const retry of error.retryEvents || []) {
+        db.emailDeliveryEvents.unshift({ id: id("delivery"), campaignId: campaign.id, recipientId: recipient.id, userId: user.id, eventType: "retry_scheduled", provider: recipient.provider, failureReason: retry.code, attempt: retry.attempt, delayMs: retry.delayMs, createdAt: recipient.attemptedAt });
+      }
       campaign.failed += 1;
       const activation = db.activationTokens.find((item) => item.userId === user.id && item.tokenDigest === tokenDigest(rawToken));
       if (activation) activation.revokedAt = new Date().toISOString();

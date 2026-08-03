@@ -22,9 +22,16 @@ describe("dashboard controller session lifecycle", () => {
     const user = { id: "u1", name: "Admin", role: "Admin" };
     window.sessionStorage.setItem("booking-dashboard-user", JSON.stringify(user));
     request.mockImplementation((url) => {
-      if (url === "/api/bootstrap") return Promise.resolve({ users: [], roles: [], regions: [], lookups: {} });
+      if (url === "/api/bootstrap")
+        return Promise.resolve({ currentUser: user, users: [], roles: [], regions: [], lookups: {} });
       if (url.startsWith("/api/bookings?")) return Promise.resolve({ rows: [] });
       if (url === "/api/notifications") return Promise.resolve({ notifications: [] });
+      if (url.startsWith("/api/admin/users?")) {
+        return Promise.resolve({
+          users: [],
+          pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1, hasNextPage: false }
+        });
+      }
       throw new Error("Unexpected request");
     });
     const { result } = renderHook(() => useDashboardController());

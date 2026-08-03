@@ -35,4 +35,16 @@ Inspect the rendered interface at desktop and mobile with dynamic content, error
 - `UI-024` Charts use accurate scales, legends, labels, values, and accessible colors.
 - `UI-025` Changed screens have desktop/mobile screenshot evidence.
 
+## Modal Visual Gate
+
+For every new or changed modal, agents must verify all of the following before PASS:
+
+- Use a shared modal control and a feature-specific class; generic `.modal` fallback styling is a failure.
+- Desktop width must fit content, remain at or below 50% of the viewport, and have an explicit pixel/rem cap. Mobile must fit without horizontal overflow or zoom.
+- Place compact dialogs in the upper half of the viewport, preserve visible parent context, and avoid full-screen desktop dialogs unless the workflow requires it.
+- Header, body, optional detail block, and footer must be visually distinct. Icons may not detach from titles; labels and values may not collide.
+- Semantic tone and color must match the state (warning, danger, information, success) with text/icon support and WCAG AA contrast.
+- Primary and escape actions must be unambiguous; actions belong in a stable footer and must not wrap or overlap at supported widths.
+- Browser evidence must assert geometry, overflow, focus entry/trap/return, Escape close, accessible name/description, and capture desktop/mobile screenshots.
+- Inspect the final production CSS bundle/load order. A selector that exists only in an unimported stylesheet is a Critical failure.
 Fail any screen with overlap, inaccessible focus, hidden critical content, or incomplete responsive behavior.

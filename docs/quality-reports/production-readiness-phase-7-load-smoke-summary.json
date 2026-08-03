@@ -1,0 +1,46 @@
+{
+  "ok": true,
+  "startedAt": "2026-08-02T19:46:11.752Z",
+  "finishedAt": "2026-08-02T19:46:17.822Z",
+  "target": "http://127.0.0.1:58880",
+  "concurrency": 3,
+  "durationSeconds": 6,
+  "includeWrites": false,
+  "thresholds": {
+    "minRequests": 24,
+    "maxErrorRate": 0.01,
+    "maxP95Ms": 750
+  },
+  "thresholdFailures": [],
+  "requestCount": 583,
+  "failureCount": 0,
+  "errorRate": 0,
+  "latencyMs": {
+    "p50": 9.67239999999947,
+    "p95": 29.503499999999804,
+    "p99": 51.58440000000019,
+    "max": 247.13419999999996
+  },
+  "byRoute": {
+    "POST /api/auth/login": {
+      "count": 1,
+      "failures": 0,
+      "p95": 247.13419999999996
+    },
+    "GET /api/health": {
+      "count": 194,
+      "failures": 0,
+      "p95": 9.67239999999947
+    },
+    "GET /api/auth/session": {
+      "count": 194,
+      "failures": 0,
+      "p95": 35.18319999999994
+    },
+    "GET /api/bookings": {
+      "count": 194,
+      "failures": 0,
+      "p95": 29.503499999999804
+    }
+  }
+}

@@ -1,11 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Login from "./components/Login";
 import ErrorState from "./components/ui/ErrorState";
 import LoadingState from "./components/ui/LoadingState";
-import DashboardOverlays from "./features/dashboard/DashboardOverlays";
 import DashboardShell from "./features/dashboard/DashboardShell";
 import useDashboardController from "./hooks/useDashboardController";
+
+const DashboardOverlays = dynamic(() => import("./features/dashboard/DashboardOverlays"), { ssr: false });
 
 export default function BookingDashboard() {
   const controller = useDashboardController();

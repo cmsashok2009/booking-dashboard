@@ -10,7 +10,8 @@ import FeatureErrorBoundary from "../../components/FeatureErrorBoundary";
 import EditableUsersTable from "../../components/EditableUsersTable";
 import Pagination from "../../components/Pagination";
 import UserOnboardingWizard from "../../components/UserOnboardingWizard";
-import { paged } from "../../utils/pagination";
+import ErrorState from "../../components/ui/ErrorState";
+import LoadingState from "../../components/ui/LoadingState";
 
 function uniqueValues(users, key) {
   return [...new Set(users.map((item) => item[key]).filter(Boolean))].sort();
@@ -34,24 +35,36 @@ export default function UsersWorkspace({
   user,
   users,
   filteredUsers,
+  totalUsers,
+  loading,
+  error,
   filters,
   page,
   roles,
   regions,
+  dealerCodes,
   workflows,
+  workflowsLoading,
+  workflowsLoadingMore,
+  workflowsError,
+  workflowPagination,
   onboarding,
   onAddSingle,
   onAddBulk,
   onAbortWorkflow,
   onContinueWorkflow,
+  onRetryWorkflows,
+  onLoadMoreWorkflows,
   onDownload,
   onFilterChange,
   onSort,
   onUserUpdated,
-  onPageChange
+  onPageChange,
+  onRetry
 }) {
   const [section, setSection] = useState("current");
-  const visibleUsers = paged(filteredUsers, page);
+  const visibleUsers = filteredUsers;
+  const resolvedTotalUsers = Number.isFinite(totalUsers) ? totalUsers : filteredUsers.length;
   const activeWorkflows = workflows.filter((workflow) => !["completed", "cancelled"].includes(workflow.status));
 
   const groups = [
@@ -93,12 +106,25 @@ export default function UsersWorkspace({
               </div>
             </div>
           </section>
-          {activeWorkflows.length ? (
+          {workflowsLoading && !activeWorkflows.length ? (
+            <LoadingState title="Loading onboarding" description="Retrieving saved onboarding progress." />
+          ) : workflowsError && !activeWorkflows.length ? (
+            <ErrorState
+              title="Onboarding could not be loaded"
+              description={workflowsError}
+              retryLabel="Retry onboarding"
+              onRetry={onRetryWorkflows}
+              showHome={false}
+            />
+          ) : activeWorkflows.length ? (
             <section className="panel onboarding-resume-panel" aria-labelledby="onboarding-resume-title">
               <div className="section-heading-row">
                 <div>
                   <h2 id="onboarding-resume-title">Onboarding in progress</h2>
-                  <p>Continue a validated batch without repeating completed steps.</p>
+                  <p>
+                    {activeWorkflows.length} of {workflowPagination?.total || activeWorkflows.length} saved workflows
+                    loaded.
+                  </p>
                 </div>
               </div>
               <div className="onboarding-resume-list">
@@ -119,6 +145,11 @@ export default function UsersWorkspace({
                   </div>
                 ))}
               </div>
+              {workflowPagination?.hasNextPage ? (
+                <Button type="button" variant="secondary" disabled={workflowsLoadingMore} onClick={onLoadMoreWorkflows}>
+                  {workflowsLoadingMore ? "Loading" : "Load more"}
+                </Button>
+              ) : null}
             </section>
           ) : null}
         </div>
@@ -180,18 +211,32 @@ export default function UsersWorkspace({
               Clear
             </Button>
           </FilterToolbar>
-          <FeatureErrorBoundary name="User table" resetKey={activeView}>
-            <EditableUsersTable
-              users={visibleUsers}
-              roles={roles}
-              regions={regions}
-              updatedBy={user.id}
-              sortState={{ key: filters.sortKey, direction: filters.sortDir }}
-              onSort={onSort}
-              onUserUpdated={onUserUpdated}
+          {loading ? (
+            <LoadingState title="Loading users" description="Retrieving the latest filtered user records." />
+          ) : error ? (
+            <ErrorState
+              title="Users could not be loaded"
+              description={error}
+              retryLabel="Retry users"
+              onRetry={onRetry}
+              showHome={false}
             />
-          </FeatureErrorBoundary>
-          <Pagination page={page} totalRows={filteredUsers.length} onPageChange={onPageChange} />
+          ) : (
+            <>
+              <FeatureErrorBoundary name="User table" resetKey={activeView}>
+                <EditableUsersTable
+                  users={visibleUsers}
+                  roles={roles}
+                  regions={regions}
+                  dealerCodes={dealerCodes}
+                  sortState={{ key: filters.sortKey, direction: filters.sortDir }}
+                  onSort={onSort}
+                  onUserUpdated={onUserUpdated}
+                />
+              </FeatureErrorBoundary>
+              <Pagination page={page} totalRows={resolvedTotalUsers} onPageChange={onPageChange} />
+            </>
+          )}
         </section>
       )}
       {onboarding.open ? (

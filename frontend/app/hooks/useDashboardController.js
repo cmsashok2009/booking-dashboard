@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildDashboardInsights, buildDashboardMetrics } from "../features/dashboard/selectors";
 import { buildDashboardViewModel } from "../features/dashboard/viewModel";
-import { createShellActions } from "../features/dashboard/controllerActions";
+import { createNavigationAction, createShellActions } from "../features/dashboard/controllerActions";
 import { createLoginAction, restoreDashboardSession } from "../features/dashboard/sessionActions";
-import { filterAndSortUsers } from "../features/users/selectors";
 import { createUserActions } from "../features/users/controllerActions";
 import { applyDetailFilter } from "../utils/bookings";
 import { request } from "../utils/api";
 import { createBookingActions } from "../features/bookings/controllerActions";
+import loadDashboardBookings from "../features/bookings/loadDashboardBookings";
+import useDashboardNotifications from "./useDashboardNotifications";
+import useDashboardCollections from "./useDashboardCollections";
 
 const EMPTY_BOOKING_FILTERS = { search: "", region: "", wholesaleInput: "", retailInput: "" };
 
@@ -46,8 +48,7 @@ export default function useDashboardController() {
   const [onboardingWorkflowId, setOnboardingWorkflowId] = useState("");
   const [templateReturnWorkflowId, setTemplateReturnWorkflowId] = useState("");
   const [preferredOnboardingTemplateId, setPreferredOnboardingTemplateId] = useState("");
-  const [notifications, setNotifications] = useState([]);
-  const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
+  const notificationState = useDashboardNotifications(user?.id);
   const [bookingWorkspaceView, setBookingWorkspaceView] = useState("workflow");
   const [bookingUploadModalOpen, setBookingUploadModalOpen] = useState(false);
   const [bookingSearch, setBookingSearch] = useState("");
@@ -61,6 +62,7 @@ export default function useDashboardController() {
   const [abortWorkflow, setAbortWorkflow] = useState(null);
   const [abortingWorkflow, setAbortingWorkflow] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [regionDependencyConflict, setRegionDependencyConflict] = useState(null);
 
   const canAdmin = user?.role === "Admin";
   const canAreaEdit = user?.role === "Area Manager";
@@ -70,20 +72,10 @@ export default function useDashboardController() {
     setBootstrap(payload);
     return payload;
   }
-
   async function loadBookings(nextFilters = bookingFilters, nextDetailFilter = detailFilter) {
-    const params = new URLSearchParams({
-      role: user?.role || "",
-      userId: user?.id || "",
-      search: nextFilters.search,
-      region: nextFilters.region,
-      wholesaleInput: nextFilters.wholesaleInput,
-      retailInput: nextFilters.retailInput
-    });
-    const payload = await request(`/api/bookings?${params}`);
+    const payload = await loadDashboardBookings(user, nextFilters);
     setBookings(applyDetailFilter(payload.rows, nextDetailFilter));
   }
-
   useEffect(() => {
     let cancelled = false;
     restoreDashboardSession()
@@ -103,49 +95,6 @@ export default function useDashboardController() {
       cancelled = true;
     };
   }, []);
-  useEffect(() => {
-    if (!user?.id) {
-      setNotifications([]);
-      return undefined;
-    }
-
-    let cancelled = false;
-    request("/api/notifications")
-      .then((payload) => {
-        if (!cancelled) setNotifications(payload.notifications || []);
-      })
-      .catch(() => {
-        if (!cancelled) setNotifications([]);
-      });
-
-    if (typeof EventSource === "undefined") {
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const stream = new EventSource("/api/notifications/stream");
-    stream.onmessage = (event) => {
-      if (cancelled) return;
-      try {
-        const payload = JSON.parse(event.data);
-        if (payload.type === "snapshot") {
-          setNotifications(payload.notifications || []);
-        } else if (payload.type === "notification" && payload.notification) {
-          setNotifications((current) =>
-            current.some((item) => item.id === payload.notification.id) ? current : [payload.notification, ...current]
-          );
-        }
-      } catch {
-        /* Ignore malformed stream events and retain the current notification state. */
-      }
-    };
-
-    return () => {
-      cancelled = true;
-      stream.close();
-    };
-  }, [user?.id]);
   const login = createLoginAction({
     setNotice,
     setUser,
@@ -155,26 +104,17 @@ export default function useDashboardController() {
     loadBootstrap,
     setBookings
   });
-  async function navigate(view) {
-    const nextDetail = ["dashboard", "bookings"].includes(view) ? "all" : detailFilter;
-    setActiveView(view);
-    setDetailFilter(nextDetail);
-    setBookingPage(1);
-    setExcelPage(1);
-    setNotice(null);
-    if (view !== "bookings") setBookingUploadModalOpen(false);
-    if (["dashboard", "bookings"].includes(view)) {
-      try {
-        await loadBookings(bookingFilters, nextDetail);
-      } catch (error) {
-        setNotice({
-          type: "error",
-          message: error.message || "Bookings could not be refreshed. Your current view has been preserved."
-        });
-      }
-    }
-  }
-
+  const navigate = createNavigationAction({
+    detailFilter,
+    bookingFilters,
+    setActiveView,
+    setDetailFilter,
+    setBookingPage,
+    setExcelPage,
+    setNotice,
+    setBookingUploadModalOpen,
+    loadBookings
+  });
   const {
     changeBookingFilters,
     updateExcelFilters,
@@ -216,27 +156,31 @@ export default function useDashboardController() {
     setEditingOptionId,
     setOptionDraft,
     selectedAreaField,
-    setBootstrap,
     setAddOptionError,
-    setAddOptionModalOpen
+    setAddOptionModalOpen,
+    setRegionDependencyConflict
   });
   const metrics = useMemo(() => buildDashboardMetrics(bookings), [bookings]);
-
   const dashboardInsights = useMemo(() => buildDashboardInsights(bookings, canAdmin), [bookings, canAdmin]);
-
-  const filteredUsers = useMemo(
-    () => filterAndSortUsers(bootstrap?.users || [], userTable),
-    [bootstrap?.users, userTable]
-  );
-
+  const { adminUsers, emailCampaigns, emailTemplates, onboardingWorkflows, effectiveBootstrap } =
+    useDashboardCollections({
+      user,
+      activeView,
+      userTable,
+      userPage,
+      setUserPage,
+      bootstrap,
+      onboardingOpen: bulkUserModalOpen
+    });
   const { updateUserFilters, sortUsers, userUpdated, downloadUsers, createSingleUser, changeSingleUserRole } =
     createUserActions({
       setUserTable,
       setUserPage,
-      setBootstrap,
-      filteredUsers,
+      updateUserRecord: adminUsers.updateUser,
+      loadAllUsers: adminUsers.loadAll,
+      reloadUsers: adminUsers.reload,
       setNotice,
-      bootstrap,
+      bootstrap: effectiveBootstrap,
       setSingleUserErrors,
       loadBootstrap,
       setSingleUserModalOpen,
@@ -263,8 +207,9 @@ export default function useDashboardController() {
     setBookingFilters,
     setBookingSearch,
     setNotice,
-    setNotifications,
-    setNotificationDrawerOpen,
+    setNotifications: notificationState.setNotifications,
+    setNotificationCount: notificationState.setNotificationCount,
+    setNotificationDrawerOpen: notificationState.setDrawerOpen,
     setBookingUploadModalOpen,
     setBookingWorkspaceView,
     setChangePasswordOpen,
@@ -284,7 +229,6 @@ export default function useDashboardController() {
   if (!sessionReady || sessionError || !user) {
     return { sessionReady, sessionError, user, notice, login };
   }
-
   return buildDashboardViewModel({
     sessionReady,
     sessionError,
@@ -293,12 +237,14 @@ export default function useDashboardController() {
     login,
     activeView,
     canAdmin,
-    notifications,
-    notificationDrawerOpen,
+    notifications: notificationState.notifications,
+    notificationCount: notificationState.notificationCount,
+    notificationCollection: notificationState.collection,
+    notificationDrawerOpen: notificationState.drawerOpen,
     navigate,
     metricClick,
     setSelectedBooking,
-    setNotificationDrawerOpen,
+    setNotificationDrawerOpen: notificationState.setDrawerOpen,
     setProfilePhotoOpen,
     setChangePasswordOpen,
     setNotice,
@@ -314,7 +260,7 @@ export default function useDashboardController() {
     bookingPage,
     bookingSearch,
     bookingFilters,
-    bootstrap,
+    bootstrap: effectiveBootstrap,
     canAreaEdit,
     setBookingSearch,
     changeBookingFilters,
@@ -338,7 +284,15 @@ export default function useDashboardController() {
     updateLookupOption,
     setAddOptionError,
     setAddOptionModalOpen,
-    filteredUsers,
+    setRegionDependencyConflict,
+    filteredUsers: adminUsers.users,
+    userTotal: adminUsers.pagination.total,
+    usersLoading: adminUsers.loading,
+    usersError: adminUsers.error,
+    reloadUsers: adminUsers.reload,
+    emailCampaigns,
+    emailTemplates,
+    onboardingWorkflows,
     userTable,
     userPage,
     setSingleUserRole,
@@ -374,6 +328,8 @@ export default function useDashboardController() {
     pendingBookingUpload,
     abortWorkflow,
     abortingWorkflow,
+    regionDependencyConflict,
+    setRegionDependencyConflict,
     passwordChanged,
     profilePhotoSaved,
     changeSingleUserRole,

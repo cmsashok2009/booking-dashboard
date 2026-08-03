@@ -52,9 +52,7 @@
   "paths": {
     "/api/admin/email-provider/google/start": {
       "post": {
-        "tags": [
-          "Email Settings"
-        ],
+        "tags": ["Email Settings"],
         "summary": "Start Admin Google OAuth connection",
         "responses": {
           "200": {
@@ -71,9 +69,7 @@
     },
     "/api/admin/email-provider/google/callback": {
       "get": {
-        "tags": [
-          "Email Settings"
-        ],
+        "tags": ["Email Settings"],
         "summary": "Complete Google OAuth using a single-use state",
         "parameters": [
           {
@@ -104,9 +100,7 @@
     },
     "/api/admin/email-provider/google/test": {
       "post": {
-        "tags": [
-          "Email Settings"
-        ],
+        "tags": ["Email Settings"],
         "summary": "Send a provider test email",
         "requestBody": {
           "required": true,
@@ -114,9 +108,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "recipientEmail"
-                ],
+                "required": ["recipientEmail"],
                 "properties": {
                   "recipientEmail": {
                     "type": "string",
@@ -142,9 +134,7 @@
     },
     "/api/admin/email-provider/google/disconnect": {
       "post": {
-        "tags": [
-          "Email Settings"
-        ],
+        "tags": ["Email Settings"],
         "summary": "Revoke and remove the active Google sender authorization",
         "responses": {
           "200": {
@@ -158,9 +148,7 @@
     },
     "/api/health": {
       "get": {
-        "tags": [
-          "System"
-        ],
+        "tags": ["System"],
         "summary": "Health check",
         "responses": {
           "200": {
@@ -178,9 +166,7 @@
     },
     "/api/auth/login": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Login with account credentials",
         "requestBody": {
           "required": true,
@@ -216,9 +202,7 @@
     },
     "/api/auth/session": {
       "get": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Validate the current HttpOnly session",
         "responses": {
           "200": {
@@ -244,9 +228,7 @@
     },
     "/api/auth/password/forgot": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Request a password reset email",
         "requestBody": {
           "required": true,
@@ -254,9 +236,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email"
-                ],
+                "required": ["email"],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -276,9 +256,7 @@
     },
     "/api/auth/password/reset/validate": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Validate a single-use password reset token",
         "responses": {
           "200": {
@@ -292,9 +270,7 @@
     },
     "/api/auth/password/reset": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Reset password with a valid token",
         "responses": {
           "200": {
@@ -308,10 +284,8 @@
     },
     "/api/auth/password/change": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "Change the authenticated user's password",
+        "tags": ["Auth"],
+        "summary": "Change the authenticated user\u0027s password",
         "responses": {
           "200": {
             "description": "Password changed and sessions revoked"
@@ -327,9 +301,7 @@
     },
     "/api/admin/onboarding/single": {
       "post": {
-        "tags": [
-          "User Onboarding"
-        ],
+        "tags": ["User Onboarding"],
         "summary": "Validate and create one pending user invitation",
         "requestBody": {
           "required": true,
@@ -356,9 +328,7 @@
     },
     "/api/bootstrap": {
       "get": {
-        "tags": [
-          "Bootstrap"
-        ],
+        "tags": ["Bootstrap"],
         "summary": "Load roles, users, lookup values, and regions",
         "responses": {
           "200": {
@@ -376,9 +346,7 @@
     },
     "/api/bookings": {
       "get": {
-        "tags": [
-          "Bookings"
-        ],
+        "tags": ["Bookings"],
         "summary": "List bookings with role and dashboard filters",
         "parameters": [
           {
@@ -417,11 +385,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "",
-                "filled",
-                "missing"
-              ]
+              "enum": ["", "filled", "missing"]
             }
           },
           {
@@ -429,30 +393,67 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "",
-                "filled",
-                "missing"
-              ]
+              "enum": ["", "filled", "missing"]
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "1-based page number. Defaults to 1.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of bookings per page. Defaults to 500 and cannot exceed 500.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 500
+            },
+            "example": 25
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Backward-compatible alias for pageSize. pageSize takes precedence when both are supplied.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "example": 25
           }
         ],
         "responses": {
           "200": {
-            "description": "Filtered bookings",
+            "description": "Filtered paginated bookings",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "rows": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Booking"
-                      }
-                    },
-                    "total": {
-                      "type": "integer"
+                  "$ref": "#/components/schemas/BookingListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid pagination request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalidPageSize": {
+                    "value": {
+                      "error": "Page size must be between 1 and 500.",
+                      "code": "INVALID_PAGE_SIZE"
                     }
                   }
                 }
@@ -464,9 +465,7 @@
     },
     "/api/bookings/{bookingId}": {
       "get": {
-        "tags": [
-          "Bookings"
-        ],
+        "tags": ["Bookings"],
         "summary": "Get one role-accessible booking",
         "parameters": [
           {
@@ -516,44 +515,90 @@
     },
     "/api/notifications": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
-        "summary": "List unread notifications for an active Admin",
+        "tags": ["Notifications"],
+        "summary": "List unread notifications for the authenticated user",
         "parameters": [
           {
-            "name": "userId",
+            "name": "page",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string"
-            },
-            "example": "u-admin"
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "actorRole",
+                "eventType",
+                "title",
+                "salesOrderId"
+              ],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Unread notification snapshot",
+            "description": "Bounded unread notification page",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notifications": {
-                      "type": "array",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "unreadCount": {
-                      "type": "integer"
-                    }
-                  }
+                  "$ref": "#/components/schemas/NotificationListResponse"
                 }
               }
             }
           },
-          "403": {
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
             "$ref": "#/components/responses/Error"
           }
         }
@@ -561,24 +606,11 @@
     },
     "/api/notifications/stream": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
-        "summary": "Stream Admin notification snapshots and updates with SSE",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "example": "u-admin"
-          }
-        ],
+        "tags": ["Notifications"],
+        "summary": "Stream bounded notification snapshots and new events for the authenticated user",
         "responses": {
           "200": {
-            "description": "Long-lived text/event-stream connection",
+            "description": "Long-lived stream beginning with at most 20 unread notifications plus exact count and pagination metadata",
             "content": {
               "text/event-stream": {
                 "schema": {
@@ -587,7 +619,7 @@
               }
             }
           },
-          "403": {
+          "401": {
             "$ref": "#/components/responses/Error"
           }
         }
@@ -595,10 +627,8 @@
     },
     "/api/notifications/{notificationId}/read": {
       "patch": {
-        "tags": [
-          "Notifications"
-        ],
-        "summary": "Mark one Admin notification as read",
+        "tags": ["Notifications"],
+        "summary": "Mark one notification as read for the authenticated user",
         "parameters": [
           {
             "name": "notificationId",
@@ -609,32 +639,28 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "userId"
-                ],
-                "properties": {
-                  "userId": {
-                    "type": "string"
-                  }
-                }
-              },
-              "example": {
-                "userId": "u-admin"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Notification read state saved"
+            "description": "Notification read state saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["notificationId", "unreadCount"],
+                  "properties": {
+                    "notificationId": {
+                      "type": "string"
+                    },
+                    "unreadCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
           },
-          "403": {
+          "401": {
             "$ref": "#/components/responses/Error"
           },
           "404": {
@@ -645,9 +671,7 @@
     },
     "/api/bookings/{bookingId}/area-inputs": {
       "patch": {
-        "tags": [
-          "Bookings"
-        ],
+        "tags": ["Bookings"],
         "summary": "Save Area Manager workflow inputs",
         "parameters": [
           {
@@ -676,9 +700,7 @@
     },
     "/api/bookings/{bookingId}/regional-inputs": {
       "patch": {
-        "tags": [
-          "Bookings"
-        ],
+        "tags": ["Bookings"],
         "summary": "Save Regional Manager workflow inputs",
         "parameters": [
           {
@@ -707,9 +729,7 @@
     },
     "/api/admin/lookups/{fieldCode}/options": {
       "post": {
-        "tags": [
-          "Admin Lookups"
-        ],
+        "tags": ["Admin Lookups"],
         "summary": "Add dropdown option for an Area Manager field",
         "parameters": [
           {
@@ -738,9 +758,7 @@
     },
     "/api/admin/lookups/{fieldCode}/options/{optionId}": {
       "patch": {
-        "tags": [
-          "Admin Lookups"
-        ],
+        "tags": ["Admin Lookups"],
         "summary": "Edit, deactivate, or reactivate a dropdown option",
         "parameters": [
           {
@@ -780,9 +798,7 @@
     },
     "/api/admin/bookings/template": {
       "get": {
-        "tags": [
-          "Admin Uploads"
-        ],
+        "tags": ["Admin Uploads"],
         "summary": "Download booking CSV template",
         "responses": {
           "200": {
@@ -800,9 +816,7 @@
     },
     "/api/admin/bookings/import": {
       "post": {
-        "tags": [
-          "Admin Uploads"
-        ],
+        "tags": ["Admin Uploads"],
         "summary": "Import booking CSV content",
         "requestBody": {
           "required": true,
@@ -830,9 +844,7 @@
     },
     "/api/admin/bookings/export": {
       "get": {
-        "tags": [
-          "Admin Uploads"
-        ],
+        "tags": ["Admin Uploads"],
         "summary": "Export bookings as Excel-compatible HTML workbook",
         "parameters": [
           {
@@ -860,15 +872,24 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Export exceeds the 10,000-row safety limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "Returns at most 10,000 filtered booking rows. Requests above the limit fail with EXPORT_TOO_LARGE so callers can narrow filters."
       }
     },
     "/api/admin/regions": {
       "post": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Create an active Region for access management",
         "requestBody": {
           "required": true,
@@ -876,9 +897,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name"
-                ],
+                "required": ["name"],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -891,7 +910,14 @@
         },
         "responses": {
           "201": {
-            "description": "Region created"
+            "description": "Reference value created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceMutationResponse"
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/Error"
@@ -910,9 +936,7 @@
     },
     "/api/admin/dealer-codes": {
       "post": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Create an active Dealer Code for an existing Region",
         "requestBody": {
           "required": true,
@@ -920,10 +944,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "code",
-                  "region"
-                ],
+                "required": ["code", "region"],
                 "properties": {
                   "code": {
                     "type": "string",
@@ -940,7 +961,14 @@
         },
         "responses": {
           "201": {
-            "description": "Dealer Code created"
+            "description": "Reference value created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceMutationResponse"
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/Error"
@@ -959,9 +987,7 @@
     },
     "/api/admin/users/template": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Download user upload CSV template",
         "responses": {
           "200": {
@@ -978,10 +1004,103 @@
       }
     },
     "/api/admin/users": {
-      "post": {
-        "tags": [
-          "Users"
+      "get": {
+        "tags": ["Users"],
+        "summary": "List users with bounded Admin filters and sorting",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "email",
+                "role",
+                "region",
+                "status",
+                "createdAt",
+                "updatedAt"
+              ],
+              "default": "name"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            }
+          }
         ],
+        "responses": {
+          "200": {
+            "description": "Filtered paginated users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
         "summary": "Create or update a single user",
         "requestBody": {
           "required": true,
@@ -1005,9 +1124,7 @@
     },
     "/api/admin/users/import": {
       "post": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Import bulk users from CSV content",
         "requestBody": {
           "required": true,
@@ -1031,9 +1148,7 @@
     },
     "/api/admin/users/{userId}": {
       "patch": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Update an existing user",
         "parameters": [
           {
@@ -1051,13 +1166,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name",
-                  "email",
-                  "role",
-                  "region",
-                  "status"
-                ],
+                "required": ["name", "email", "role", "region", "status"],
                 "properties": {
                   "name": {
                     "type": "string"
@@ -1074,14 +1183,14 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "active",
-                      "inactive",
-                      "locked"
-                    ]
+                    "enum": ["active", "inactive", "locked"]
                   },
                   "updatedBy": {
                     "type": "string"
+                  },
+                  "dealerCode": {
+                    "type": "string",
+                    "description": "Optional Dealer Code assignment. Send an empty string when moving a user to a Region where the previous Dealer Code is not valid."
                   }
                 }
               }
@@ -1103,9 +1212,7 @@
     },
     "/api/auth/activation/validate": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Validate a single-use account activation token",
         "requestBody": {
           "required": true,
@@ -1113,9 +1220,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "token"
-                ],
+                "required": ["token"],
                 "properties": {
                   "token": {
                     "type": "string",
@@ -1138,9 +1243,7 @@
     },
     "/api/auth/activation/complete": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Set the initial password and consume the activation token",
         "requestBody": {
           "required": true,
@@ -1148,11 +1251,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "token",
-                  "password",
-                  "confirmPassword"
-                ],
+                "required": ["token", "password", "confirmPassword"],
                 "properties": {
                   "token": {
                     "type": "string",
@@ -1186,31 +1285,14 @@
     },
     "/api/admin/onboarding/validate": {
       "post": {
-        "tags": [
-          "User Onboarding"
-        ],
+        "tags": ["User Onboarding"],
         "summary": "Validate a user upload and create a resumable workflow",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ImportRequest"
-                  },
-                  {
-                    "type": "object",
-                    "required": [
-                      "actorId"
-                    ],
-                    "properties": {
-                      "actorId": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/ImportRequest"
               }
             }
           }
@@ -1230,22 +1312,12 @@
     },
     "/api/admin/onboarding/{workflowId}": {
       "get": {
-        "tags": [
-          "User Onboarding"
-        ],
+        "tags": ["User Onboarding"],
         "summary": "Resume an onboarding workflow",
         "parameters": [
           {
             "name": "workflowId",
             "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "userId",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string"
@@ -1267,9 +1339,7 @@
     },
     "/api/admin/onboarding/{workflowId}/{action}": {
       "post": {
-        "tags": [
-          "User Onboarding"
-        ],
+        "tags": ["User Onboarding"],
         "summary": "Advance import, template, recipient, or send steps",
         "parameters": [
           {
@@ -1312,25 +1382,93 @@
     },
     "/api/admin/email-templates": {
       "get": {
-        "tags": [
-          "Email Templates"
-        ],
-        "summary": "List sample and organization templates",
+        "tags": ["Email Templates"],
+        "summary": "List bounded starter and organization email templates",
         "parameters": [
           {
-            "name": "userId",
+            "name": "page",
             "in": "query",
-            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Matches organization-template name, subject, type, or status.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "subject",
+                "status",
+                "type",
+                "version",
+                "createdAt",
+                "updatedAt"
+              ],
+              "default": "updatedAt"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Template catalog"
+            "description": "Filtered organization templates plus a capped starter-template catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailTemplateListResponse"
+                }
+              }
+            }
           },
           "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
             "$ref": "#/components/responses/Error"
           }
         }
@@ -1338,9 +1476,7 @@
     },
     "/api/admin/email-templates/samples/{sampleId}/clone": {
       "post": {
-        "tags": [
-          "Email Templates"
-        ],
+        "tags": ["Email Templates"],
         "summary": "Create an editable draft from a supplied sample",
         "parameters": [
           {
@@ -1364,9 +1500,7 @@
     },
     "/api/admin/email-templates/{templateId}": {
       "patch": {
-        "tags": [
-          "Email Templates"
-        ],
+        "tags": ["Email Templates"],
         "summary": "Validate and save a versioned email template",
         "parameters": [
           {
@@ -1393,25 +1527,80 @@
     },
     "/api/admin/email-campaigns": {
       "get": {
-        "tags": [
-          "Email Delivery"
-        ],
-        "summary": "List invitation campaigns and recipient delivery logs",
+        "tags": ["Email Delivery"],
+        "summary": "List bounded invitation campaigns and recipient delivery outcomes",
         "parameters": [
           {
-            "name": "userId",
+            "name": "page",
             "in": "query",
-            "required": true,
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Matches campaign ID/status or recipient name, email, provider, or status.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "successful", "failed", "pending", "completed"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "status", "sent", "failed", "total"],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Campaign and delivery events"
+            "description": "Filtered paginated campaigns plus a bounded compatibility page of delivery events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailCampaignListResponse"
+                }
+              }
+            }
           },
           "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
             "$ref": "#/components/responses/Error"
           }
         }
@@ -1433,9 +1622,7 @@
     },
     "/api/admin/regions/{regionId}": {
       "patch": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Update or activate/deactivate a Region",
         "parameters": [
           {
@@ -1460,10 +1647,7 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "active",
-                      "inactive"
-                    ]
+                    "enum": ["active", "inactive"]
                   }
                 }
               }
@@ -1472,28 +1656,33 @@
         },
         "responses": {
           "200": {
-            "description": "Reference value updated"
+            "description": "Reference value updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceMutationResponse"
+                }
+              }
+            }
           },
           "403": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
           },
           "404": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
           },
           "409": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
           },
           "422": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
           }
         }
       }
     },
     "/api/admin/dealer-codes/{dealerCodeId}": {
       "patch": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Update or activate/deactivate a Dealer Code",
         "parameters": [
           {
@@ -1522,10 +1711,7 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "active",
-                      "inactive"
-                    ]
+                    "enum": ["active", "inactive"]
                   }
                 }
               }
@@ -1534,19 +1720,550 @@
         },
         "responses": {
           "200": {
-            "description": "Reference value updated"
+            "description": "Reference value updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceMutationResponse"
+                }
+              }
+            }
           },
           "403": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
           },
           "404": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
           },
           "409": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
           },
           "422": {
-            "": "#/components/responses/Error"
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Admin request metrics",
+        "operationId": "getMetrics",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated sanitized request metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsSnapshot"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin access is required"
+          }
+        }
+      }
+    },
+    "/api/admin/onboarding": {
+      "get": {
+        "tags": ["User Onboarding"],
+        "summary": "List the authenticated Admin\u0027s resumable onboarding workflows",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "updatedAt",
+                "createdAt",
+                "status",
+                "currentStep",
+                "fileName"
+              ],
+              "default": "updatedAt"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded owner-scoped workflow page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingWorkflowListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/admin/uploads": {
+      "get": {
+        "tags": ["Imports"],
+        "summary": "List safe bounded upload history",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "originalFileName",
+                "uploadCategory",
+                "status",
+                "totalRows"
+              ],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata-only upload page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/admin/audit-events": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "List safe bounded audit metadata",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "action", "entityType"],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata-only audit page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/admin/email-delivery-events": {
+      "get": {
+        "tags": ["Email Delivery"],
+        "summary": "List safe bounded delivery events",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "campaignId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "eventType", "provider", "attempt"],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe delivery-event page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailDeliveryEventListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/admin/reference-data": {
+      "get": {
+        "tags": ["Administration"],
+        "summary": "List safe bounded reference data",
+        "parameters": [
+          {
+            "name": "collection",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "regions",
+                "dealerCodes",
+                "dealerAssignments",
+                "roles",
+                "lookupOptions"
+              ]
+            }
+          },
+          {
+            "name": "fieldCode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 100
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "sortKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["label", "status", "updatedAt", "hierarchyLevel"],
+              "default": "label"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe bounded reference-data page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceDataListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
           }
         }
       }
@@ -1642,15 +2359,20 @@
         "properties": {
           "error": {
             "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable error code."
+          },
+          "correlationId": {
+            "type": "string",
+            "description": "Request correlation ID also returned in the x-correlation-id header."
           }
         }
       },
       "LoginRequest": {
         "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
+        "required": ["email", "password"],
         "properties": {
           "email": {
             "type": "string",
@@ -1690,6 +2412,47 @@
           },
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "UserPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UserListResponse": {
+        "type": "object",
+        "required": ["users", "pagination"],
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/UserPagination"
           }
         }
       },
@@ -1761,17 +2524,66 @@
       },
       "BootstrapResponse": {
         "type": "object",
+        "required": ["currentUser"],
         "properties": {
+          "currentUser": {
+            "$ref": "#/components/schemas/User",
+            "description": "Authoritative user for the current HttpOnly session."
+          },
           "roles": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "maxItems": 100
           },
           "users": {
             "type": "array",
+            "maxItems": 100,
+            "description": "Bounded compatibility page. Admin clients should follow collectionLinks.users and collectionPagination.users.",
             "items": {
               "$ref": "#/components/schemas/User"
+            }
+          },
+          "collectionPagination": {
+            "type": "object",
+            "properties": {
+              "users": {
+                "$ref": "#/components/schemas/UserPagination"
+              },
+              "emailCampaigns": {
+                "$ref": "#/components/schemas/EmailCampaignPagination"
+              },
+              "emailTemplates": {
+                "$ref": "#/components/schemas/EmailTemplatePagination"
+              },
+              "onboardingWorkflows": {
+                "$ref": "#/components/schemas/OnboardingWorkflowPagination"
+              }
+            }
+          },
+          "collectionLinks": {
+            "type": "object",
+            "properties": {
+              "users": {
+                "type": "string",
+                "example": "/api/admin/users"
+              },
+              "emailCampaigns": {
+                "type": "string",
+                "example": "/api/admin/email-campaigns"
+              },
+              "emailTemplates": {
+                "type": "string",
+                "example": "/api/admin/email-templates"
+              },
+              "onboardingWorkflows": {
+                "type": "string"
+              },
+              "referenceData": {
+                "type": "string",
+                "example": "/api/admin/reference-data"
+              }
             }
           },
           "lookups": {
@@ -1784,26 +2596,102 @@
             }
           },
           "lookupOptions": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "maxItems": 100,
+              "items": {
+                "$ref": "#/components/schemas/ReferenceDataItem"
+              }
+            }
           },
           "regions": {
             "type": "array",
             "items": {
               "type": "string"
+            },
+            "maxItems": 100
+          },
+          "emailCampaigns": {
+            "type": "array",
+            "maxItems": 100,
+            "description": "Bounded compatibility page. Admin clients should follow collectionLinks.emailCampaigns and collectionPagination.emailCampaigns.",
+            "items": {
+              "$ref": "#/components/schemas/EmailCampaign"
+            }
+          },
+          "emailTemplateSamples": {
+            "type": "array",
+            "maxItems": 100,
+            "description": "Capped curated starter-template catalog; inspect collectionCaps.emailTemplateSamples.",
+            "items": {
+              "$ref": "#/components/schemas/EmailTemplate"
+            }
+          },
+          "emailTemplates": {
+            "type": "array",
+            "maxItems": 100,
+            "description": "Bounded compatibility page. Admin clients should follow collectionLinks.emailTemplates and collectionPagination.emailTemplates.",
+            "items": {
+              "$ref": "#/components/schemas/EmailTemplate"
+            }
+          },
+          "collectionCaps": {
+            "type": "object",
+            "properties": {
+              "emailTemplateSamples": {
+                "$ref": "#/components/schemas/CollectionCap"
+              }
+            }
+          },
+          "onboardingWorkflows": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/OnboardingWorkflowListItem"
+            }
+          },
+          "regionOptions": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ReferenceDataItem"
+            }
+          },
+          "dealerCodes": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ReferenceDataItem"
+            }
+          },
+          "dealerAssignments": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ReferenceDataItem"
+            }
+          },
+          "roleDefinitions": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ReferenceDataItem"
+            }
+          },
+          "referenceDataPagination": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CollectionCap"
             }
           }
         }
       },
       "AddLookupOptionRequest": {
         "type": "object",
-        "required": [
-          "label"
-        ],
+        "required": ["label"],
         "properties": {
           "label": {
-            "type": "string"
-          },
-          "updatedBy": {
             "type": "string"
           }
         }
@@ -1816,35 +2704,39 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "inactive"
-            ]
-          },
-          "updatedBy": {
-            "type": "string"
+            "enum": ["active", "inactive"]
           }
         }
       },
       "LookupUpdateResponse": {
         "type": "object",
+        "required": ["collectionUrl"],
         "properties": {
+          "region": {
+            "$ref": "#/components/schemas/ReferenceDataItem"
+          },
+          "dealerCode": {
+            "$ref": "#/components/schemas/ReferenceDataItem"
+          },
           "option": {
-            "type": "object"
+            "$ref": "#/components/schemas/ReferenceDataItem"
           },
-          "lookups": {
-            "type": "object"
+          "fieldCode": {
+            "type": "string"
           },
-          "lookupOptions": {
-            "type": "object"
+          "updatedCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "collectionUrl": {
+            "type": "string",
+            "example": "/api/admin/reference-data?collection=regions"
           }
         }
       },
       "ImportRequest": {
         "type": "object",
-        "required": [
-          "content"
-        ],
+        "required": ["content"],
         "properties": {
           "fileName": {
             "type": "string"
@@ -1856,12 +2748,7 @@
       },
       "UserUploadRow": {
         "type": "object",
-        "required": [
-          "Name",
-          "Email",
-          "Role",
-          "Status"
-        ],
+        "required": ["Name", "Email", "Role", "Status"],
         "properties": {
           "Name": {
             "type": "string"
@@ -1871,7 +2758,11 @@
             "format": "email"
           },
           "Phone": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9]{10}$",
+            "minLength": 10,
+            "maxLength": 10,
+            "example": "9876543210"
           },
           "Role": {
             "type": "string"
@@ -1887,14 +2778,7 @@
           },
           "Status": {
             "type": "string",
-            "enum": [
-              "active",
-              "inactive",
-              "locked"
-            ]
-          },
-          "Temporary Password": {
-            "type": "string"
+            "enum": ["active", "inactive", "locked"]
           }
         }
       },
@@ -1930,15 +2814,1037 @@
             "items": {
               "type": "object"
             }
+          }
+        }
+      },
+      "MetricsSnapshot": {
+        "type": "object",
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
           },
-          "credentials": {
+          "requests": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "byRoute": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              },
+              "byStatus": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "latencyMs": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "average": {
+                "type": "number"
+              },
+              "max": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "BookingPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "example": 25
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 125
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 5
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "BookingListResponse": {
+        "type": "object",
+        "required": ["rows", "total", "pagination"],
+        "properties": {
+          "rows": {
             "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Booking"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total bookings after filtering before pagination.",
+            "example": 125
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/BookingPagination"
+          }
+        }
+      },
+      "EmailCampaignRecipient": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "status": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerReference": {
+            "type": "string"
+          },
+          "failureReason": {
+            "type": "string"
+          },
+          "attemptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attemptCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "EmailCampaign": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "sent",
+          "failed",
+          "total",
+          "createdAt",
+          "recipients"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workflowId": {
+            "type": "string"
+          },
+          "templateId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recipients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailCampaignRecipient"
+            }
+          }
+        }
+      },
+      "EmailCampaignPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EmailDeliveryEventPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        },
+        "title": "EmailDeliveryEventPagination"
+      },
+      "EmailCampaignListResponse": {
+        "type": "object",
+        "required": [
+          "campaigns",
+          "pagination",
+          "summary",
+          "events",
+          "eventPagination"
+        ],
+        "properties": {
+          "campaigns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailCampaign"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/EmailCampaignPagination"
+          },
+          "events": {
+            "type": "array",
+            "maxItems": 100,
             "items": {
               "type": "object"
             }
+          },
+          "eventPagination": {
+            "$ref": "#/components/schemas/EmailDeliveryEventPagination"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/EmailCampaignSummary"
+          }
+        }
+      },
+      "EmailCampaignSummary": {
+        "type": "object",
+        "required": ["campaigns", "sent", "failed"],
+        "properties": {
+          "campaigns": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "EmailTemplate": {
+        "type": "object",
+        "required": ["id", "name", "subject", "type", "status"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "bodyText": {
+            "type": "string"
+          },
+          "bodyHtml": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "isSystem": {
+            "type": "boolean"
+          },
+          "sourceSampleId": {
+            "type": "string"
+          },
+          "reviewedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "updatedBy": {
+            "type": "string"
+          }
+        }
+      },
+      "EmailTemplatePagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EmailTemplateSummary": {
+        "type": "object",
+        "required": ["total", "active", "draft"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "active": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "draft": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "CollectionCap": {
+        "type": "object",
+        "required": ["limit", "total", "hasMore"],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EmailTemplateListResponse": {
+        "type": "object",
+        "required": [
+          "samples",
+          "samplePagination",
+          "templates",
+          "pagination",
+          "summary"
+        ],
+        "properties": {
+          "samples": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/EmailTemplate"
+            }
+          },
+          "samplePagination": {
+            "$ref": "#/components/schemas/CollectionCap"
+          },
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailTemplate"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/EmailTemplatePagination"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/EmailTemplateSummary"
+          }
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "required": [
+          "id",
+          "eventType",
+          "bookingId",
+          "salesOrderId",
+          "actorName",
+          "actorRole",
+          "title",
+          "message",
+          "changedFields",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "bookingId": {
+            "type": "string"
+          },
+          "salesOrderId": {
+            "type": "string"
+          },
+          "dealerCode": {
+            "type": "string"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "actorRole": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["key", "label"],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NotificationPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "NotificationListResponse": {
+        "type": "object",
+        "required": ["notifications", "unreadCount", "pagination"],
+        "properties": {
+          "notifications": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          },
+          "unreadCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/NotificationPagination"
+          }
+        }
+      },
+      "OnboardingWorkflowSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ready": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "created": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "skippedExisting": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duplicateInFile": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "invalid": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "OnboardingWorkflowListItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "ownerUserId",
+          "status",
+          "currentStep",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "ownerUserId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currentStep": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OnboardingWorkflowSummary"
+          },
+          "selectedTemplateId": {
+            "type": "string"
+          },
+          "selectedTemplateVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "campaignId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "OnboardingWorkflowPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "OnboardingWorkflowListResponse": {
+        "type": "object",
+        "required": ["workflows", "pagination"],
+        "properties": {
+          "workflows": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/OnboardingWorkflowListItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/OnboardingWorkflowPagination"
+          }
+        }
+      },
+      "UploadListItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "uploadCategory",
+          "originalFileName",
+          "status",
+          "totalRows",
+          "insertedRows",
+          "updatedRows",
+          "failedRows",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "uploadCategory": {
+            "type": "string"
+          },
+          "originalFileName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "totalRows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "insertedRows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "updatedRows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failedRows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "uploadedBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UploadPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UploadListResponse": {
+        "type": "object",
+        "required": ["uploads", "pagination"],
+        "properties": {
+          "uploads": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/UploadListItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/UploadPagination"
+          }
+        }
+      },
+      "AuditEventListItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "entityType",
+          "entityId",
+          "actorUserId",
+          "requestId",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string"
+          },
+          "actorUserId": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuditEventPagination": {
+        "type": "object",
+        "required": ["page", "pageSize", "total", "totalPages", "hasNextPage"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        },
+        "title": "AuditEventPagination"
+      },
+      "AuditEventListResponse": {
+        "type": "object",
+        "required": ["events", "pagination"],
+        "properties": {
+          "events": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AuditEventListItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/AuditEventPagination"
+          }
+        }
+      },
+      "EmailDeliveryEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "campaignId",
+          "recipientId",
+          "eventType",
+          "provider",
+          "failureReason",
+          "attempt",
+          "delayMs",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campaignId": {
+            "type": "string"
+          },
+          "recipientId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "failureReason": {
+            "type": "string"
+          },
+          "attempt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "delayMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EmailDeliveryEventListResponse": {
+        "type": "object",
+        "required": ["events", "pagination"],
+        "properties": {
+          "events": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/EmailDeliveryEvent"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/EmailDeliveryEventPagination"
+          }
+        }
+      },
+      "ReferenceDataItem": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "dealerCode": {
+            "type": "string"
+          },
+          "areaManagerUserId": {
+            "type": "string"
+          },
+          "regionalManagerUserId": {
+            "type": "string"
+          },
+          "hierarchyLevel": {
+            "type": "integer"
+          },
+          "managerRoleCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isSystem": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReferenceDataListResponse": {
+        "type": "object",
+        "required": ["collection", "items", "pagination"],
+        "properties": {
+          "collection": {
+            "type": "string"
+          },
+          "fieldCode": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ReferenceDataItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/UserPagination"
+          }
+        }
+      },
+      "ReferenceMutationResponse": {
+        "type": "object",
+        "required": ["collectionUrl"],
+        "properties": {
+          "region": {
+            "$ref": "#/components/schemas/ReferenceDataItem"
+          },
+          "dealerCode": {
+            "$ref": "#/components/schemas/ReferenceDataItem"
+          },
+          "option": {
+            "$ref": "#/components/schemas/ReferenceDataItem"
+          },
+          "fieldCode": {
+            "type": "string"
+          },
+          "updatedCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "collectionUrl": {
+            "type": "string",
+            "example": "/api/admin/reference-data?collection=regions"
           }
         }
       }
     }
   }
-}\n
+}

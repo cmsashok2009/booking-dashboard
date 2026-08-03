@@ -1,0 +1,362 @@
+:root {
+  --tab-selected-bg: #eef5ff;
+  --tab-parent-bg: #eaf2fd;
+  --tab-active-border: #b9d2f5;
+  --tab-active-ink: #124f9c;
+}
+
+.reference-data-tabs {
+  margin: 0 22px;
+  padding: 8px 12px 0;
+  display: flex;
+  gap: 12px;
+  overflow: auto hidden;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--color-panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.reference-tab-group {
+  min-width: max-content;
+  padding: 0 6px;
+  border-top: 3px solid transparent;
+}
+
+.reference-tab-group.is-selected {
+  border-top-color: var(--brand);
+  border-radius: 6px 6px 0 0;
+  background: var(--tab-selected-bg);
+  box-shadow: inset 0 3px 0 var(--brand);
+}
+
+.reference-tab-group > span,
+.reference-data-kicker {
+  display: block;
+  margin: 7px 10px 3px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.reference-tab-group.is-selected > span {
+  color: var(--brand);
+}
+
+.reference-tab-group.is-selected > span::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--brand);
+  content: "";
+  vertical-align: 1px;
+}
+
+.app-tab-list {
+  display: flex;
+  gap: 4px;
+}
+
+button.app-tab {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-bottom-width: 3px;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--interactive-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button.app-tab:hover:not(:disabled, .active) {
+  border-color: var(--interactive-hover-border);
+  border-bottom-color: transparent;
+  background: var(--interactive-hover-bg);
+  color: var(--interactive-hover-ink);
+}
+
+button.app-tab.active,
+button.app-tab.active:hover:not(:disabled) {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  border-color: var(--tab-active-border);
+  border-top: 3px solid var(--brand);
+  border-bottom-color: var(--color-panel);
+  background: var(--color-panel);
+  color: var(--tab-active-ink);
+}
+
+button.app-tab:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -3px;
+}
+
+.reference-data-kicker {
+  margin: 0;
+}
+
+.reference-data-tabs + .area-options-panel {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+@media (width <= 900px) {
+  .reference-data-tabs {
+    margin-left: 14px;
+    margin-right: 14px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+.email-management-tabs {
+  margin: 0 22px;
+  padding: 8px 12px 0;
+  overflow: auto hidden;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--color-panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.email-management-tabs .app-tab-list {
+  min-width: max-content;
+}
+
+#email-management-panel > * {
+  margin-left: 22px;
+  margin-right: 22px;
+}
+
+@media (width <= 900px) {
+  .email-management-tabs {
+    margin-left: 14px;
+    margin-right: 14px;
+    padding: 0 8px;
+  }
+
+  #email-management-panel > * {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+}
+
+.grouped-page-tabs {
+  margin: 0 22px;
+  padding: 0;
+  display: block;
+  overflow: auto hidden;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--color-panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.grouped-page-tabs .grouped-tabs-children {
+  min-width: max-content;
+  padding: 6px 10px 0;
+  gap: 4px;
+  background: var(--color-panel);
+}
+
+.grouped-tabs-children button.app-tab {
+  min-height: 42px;
+}
+
+.grouped-page-tabs + .area-options-panel {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.email-management-tabs + #email-management-panel {
+  margin: 0 22px;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.email-management-tabs + #email-management-panel > * {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.email-management-tabs + #email-management-panel .email-settings-page {
+  padding: 0;
+}
+
+@media (width <= 900px) {
+  .grouped-page-tabs,
+  .email-management-tabs + #email-management-panel {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+}
+
+.tabbed-workspace {
+  margin: 0 22px 22px;
+  min-width: 0;
+  overflow: visible;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--color-panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.tabbed-workspace > .grouped-page-tabs {
+  position: sticky;
+  top: 72px;
+  z-index: 6;
+  margin: 0;
+  border: 0;
+  border-radius: 7px 7px 0 0;
+  background: var(--color-panel);
+  box-shadow: 0 8px 18px -16px var(--palette-rgb-16-24-40-0-7);
+}
+
+.tabbed-workspace-canvas {
+  min-width: 0;
+  padding: 24px;
+}
+
+.user-management-canvas > .panel,
+.user-management-add-view > .panel {
+  margin: 0;
+  padding: 24px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.user-management-canvas > .user-management-current-view,
+.user-management-add-view > .panel:first-child {
+  padding-top: 0;
+}
+
+.user-management-add-view > .panel + .panel {
+  border-top: 1px solid var(--line);
+}
+
+.business-settings-content {
+  min-width: 0;
+}
+
+.email-management-canvas > .email-settings-page,
+.email-management-canvas > .template-management,
+.email-management-canvas > .delivery-management {
+  margin: 0;
+  padding: 0;
+}
+
+.email-management-canvas > .email-settings-page {
+  gap: 0;
+}
+
+.email-management-canvas .email-settings-page > .app-panel,
+.email-management-canvas .template-management > .panel,
+.email-management-canvas .delivery-management > .delivery-log-panel {
+  margin: 0;
+  padding: 24px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.email-management-canvas .email-settings-page > .app-panel:first-child,
+.email-management-canvas .template-management > .panel:first-of-type {
+  padding-top: 0;
+}
+
+.email-management-canvas .email-settings-page > .app-panel + .app-panel,
+.email-management-canvas .template-management > .panel + .panel {
+  border-top: 1px solid var(--line);
+}
+
+.email-management-canvas .delivery-management {
+  gap: 24px;
+}
+
+.email-management-canvas .delivery-management > .delivery-log-panel {
+  padding-bottom: 0;
+  border-top: 1px solid var(--line);
+}
+
+@media (width <= 900px) {
+  .tabbed-workspace {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .tabbed-workspace-canvas {
+    padding: 16px;
+  }
+}
+
+/* Shared full-canvas tab workspaces */
+.booking-tabbed-workspace .grouped-tabs-children {
+  padding-top: 8px;
+}
+
+.booking-management-canvas {
+  position: relative;
+}
+
+.booking-canvas-actions {
+  display: flex;
+  min-height: 50px;
+  margin-bottom: 16px;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.booking-content-section {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.email-management-canvas .email-content-section {
+  min-width: 0;
+  margin: 0;
+  padding: 24px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.email-management-canvas .email-content-section:first-of-type {
+  padding-top: 0;
+}
+
+.email-management-canvas .email-content-section + .email-content-section {
+  border-top: 1px solid var(--line);
+}
+
+.email-management-canvas .delivery-log-panel {
+  padding-bottom: 0;
+}
+
+@media (width <= 700px) {
+  .booking-canvas-actions {
+    min-height: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}

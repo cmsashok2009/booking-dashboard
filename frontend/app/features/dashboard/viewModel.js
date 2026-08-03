@@ -1,3 +1,5 @@
+import { buildUserCollectionModel } from "../users/userCollectionModel";
+import { EMPTY_NOTIFICATION_COLLECTION } from "./emptyNotificationCollection";
 export function buildDashboardViewModel(context) {
   const {
     sessionReady,
@@ -8,6 +10,8 @@ export function buildDashboardViewModel(context) {
     activeView,
     canAdmin,
     notifications,
+    notificationCount = 0,
+    notificationCollection = EMPTY_NOTIFICATION_COLLECTION,
     notificationDrawerOpen,
     navigate,
     metricClick,
@@ -53,6 +57,13 @@ export function buildDashboardViewModel(context) {
     setAddOptionError,
     setAddOptionModalOpen,
     filteredUsers,
+    userTotal,
+    usersLoading,
+    usersError,
+    reloadUsers,
+    emailCampaigns,
+    emailTemplates,
+    onboardingWorkflows,
     userTable,
     userPage,
     setSingleUserRole,
@@ -88,6 +99,8 @@ export function buildDashboardViewModel(context) {
     pendingBookingUpload,
     abortWorkflow,
     abortingWorkflow,
+    regionDependencyConflict,
+    setRegionDependencyConflict,
     passwordChanged,
     profilePhotoSaved,
     changeSingleUserRole,
@@ -109,6 +122,7 @@ export function buildDashboardViewModel(context) {
     canAdmin,
     notice,
     notifications,
+    notificationCount,
     notificationDrawerOpen
   };
   const shellActions = {
@@ -159,13 +173,19 @@ export function buildDashboardViewModel(context) {
     },
     areaFields: {
       selectedField: selectedAreaField,
-      options: selectedAreaField === "roles"
-        ? (bootstrap?.roleDefinitions || []).map((item) => ({ ...item, id: item.code, label: item.name, status: item.isActive ? "active" : "inactive" }))
-        : selectedAreaField === "regions"
-          ? (bootstrap?.regionOptions || []).map((item) => ({ ...item, label: item.name }))
-          : selectedAreaField === "dealerCodes"
-          ? (bootstrap?.dealerCodes || []).map((item) => ({ ...item, label: item.code }))
-          : bootstrap?.lookupOptions?.[selectedAreaField] || [],
+      options:
+        selectedAreaField === "roles"
+          ? (bootstrap?.roleDefinitions || []).map((item) => ({
+              ...item,
+              id: item.code,
+              label: item.name,
+              status: item.isActive ? "active" : "inactive"
+            }))
+          : selectedAreaField === "regions"
+            ? (bootstrap?.regionOptions || []).map((item) => ({ ...item, label: item.name }))
+            : selectedAreaField === "dealerCodes"
+              ? (bootstrap?.dealerCodes || []).map((item) => ({ ...item, label: item.code }))
+              : bootstrap?.lookupOptions?.[selectedAreaField] || [],
       search: areaOptionSearch,
       status: areaOptionStatus,
       editingId: editingOptionId,
@@ -191,13 +211,14 @@ export function buildDashboardViewModel(context) {
     users: {
       activeView,
       user,
-      users: bootstrap?.users || [],
+      users: filteredUsers,
       filteredUsers,
+      totalUsers: userTotal,
+      loading: usersLoading,
+      error: usersError,
       filters: userTable,
       page: userPage,
-      roles: (bootstrap?.roleDefinitions || []).map((role) => role.name),
-      regions: bootstrap?.regions || [],
-      workflows: bootstrap?.onboardingWorkflows || [],
+      ...buildUserCollectionModel(bootstrap, onboardingWorkflows),
       onAddSingle: () => {
         setSingleUserRole("");
         setSingleUserErrors({});
@@ -217,11 +238,12 @@ export function buildDashboardViewModel(context) {
       onSort: sortUsers,
       onUserUpdated: userUpdated,
       onPageChange: setUserPage,
+      onRetry: reloadUsers,
       onboarding: {
         open: bulkUserModalOpen,
         workflowId: onboardingWorkflowId,
         preferredTemplateId: preferredOnboardingTemplateId,
-        templates: bootstrap?.emailTemplates || [],
+        templates: emailTemplates.activeTemplates,
         onClose: () => setBulkUserModalOpen(false),
         onUpdated: loadBootstrap,
         onCreateTemplate: (workflowId) => {
@@ -236,10 +258,9 @@ export function buildDashboardViewModel(context) {
     email: {
       templates: {
         user,
-        samples: bootstrap?.emailTemplateSamples || [],
-        templates: bootstrap?.emailTemplates || [],
+        ...emailTemplates,
         returnWorkflowId: templateReturnWorkflowId,
-        onReload: loadBootstrap,
+        onReload: emailTemplates.reloadAll,
         onReturnToOnboarding: (template) => {
           if (template) setNotice({ type: "success", message: `${template.name} is ready for this onboarding batch.` });
           setPreferredOnboardingTemplateId(template?.id || "");
@@ -250,7 +271,7 @@ export function buildDashboardViewModel(context) {
         },
         setNotice
       },
-      campaigns: bootstrap?.emailCampaigns || [],
+      campaigns: emailCampaigns,
       settings: { provider: bootstrap?.emailProvider, user, onReload: loadBootstrap, setNotice }
     }
   };
@@ -273,8 +294,11 @@ export function buildDashboardViewModel(context) {
     pendingBookingUpload,
     notificationDrawerOpen,
     notifications,
+    notificationCount,
+    notificationCollection,
     abortWorkflow,
-    abortingWorkflow
+    abortingWorkflow,
+    regionDependencyConflict
   };
   const overlayActions = {
     closeChangePassword: () => setChangePasswordOpen(false),
@@ -298,11 +322,17 @@ export function buildDashboardViewModel(context) {
     removeBookingUpload,
     submitBookingUpload,
     closeNotifications: () => setNotificationDrawerOpen(false),
+    retryNotifications: notificationCollection.retry,
+    loadMoreNotifications: notificationCollection.loadMore,
     openNotification,
     closeAbortWorkflow: () => setAbortWorkflow(null),
-    confirmAbortWorkflow
+    confirmAbortWorkflow,
+    closeRegionDependencyConflict: () => setRegionDependencyConflict(null),
+    viewRegionDealerCodes: () => {
+      setRegionDependencyConflict(null);
+      changeAreaField("dealerCodes");
+    }
   };
-
   return {
     sessionReady,
     sessionError,

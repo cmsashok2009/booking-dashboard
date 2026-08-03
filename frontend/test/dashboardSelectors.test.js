@@ -63,5 +63,8 @@ test("user selector includes admins and combines search, filters, and sorting", 
     sortKey: "name",
     sortDir: "asc"
   });
-  assert.deepEqual(admins.map(({ name }) => name), ["Root"]);
+  assert.deepEqual(
+    admins.map(({ name }) => name),
+    ["Root"]
+  );
 });

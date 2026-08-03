@@ -38,7 +38,6 @@ export async function POST(request) {
   const formData = await request.formData();
   const useSample = formData.get("sample") === "1";
   const uploadFile = formData.get("userFile");
-  const actorId = String(formData.get("actorId") || "");
 
   try {
     let content = "";
@@ -66,7 +65,7 @@ export async function POST(request) {
       method: "POST",
       cache: "no-store",
       headers: { "content-type": "application/json", cookie: request.headers.get("cookie") || "" },
-      body: JSON.stringify({ fileName, content, actorId })
+      body: JSON.stringify({ fileName, content })
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {

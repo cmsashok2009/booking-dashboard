@@ -1,12 +1,20 @@
 {
-  "name": "booking-dashboard-workspace",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Role based booking dashboard with separate frontend and backend folders.",
-  "scripts": {
-    "dev:frontend": "npm --prefix frontend run dev",
-    "dev:backend": "npm --prefix backend run dev",
-    "build": "npm --prefix frontend run build",
-    "test": "npm --prefix backend run test"
-  }
+    "name": "booking-dashboard-workspace",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Role based booking dashboard with separate frontend and backend folders.",
+    "scripts": {
+        "dev:frontend": "npm --prefix frontend run dev",
+        "dev:backend": "npm --prefix backend run dev",
+        "build": "npm --prefix frontend run build",
+        "test": "npm --prefix backend run test",
+        "load:smoke": "npm --prefix backend run load:smoke",
+        "security:scan": "node scripts/production-security-scan.mjs",
+        "test:security-scan": "node --test test/production-security-scan.test.mjs",
+        "runbooks:check": "node scripts/validate-production-runbooks.mjs",
+        "test:runbooks": "node --test test/production-runbooks.test.mjs",
+        "sbom:generate": "node scripts/generate-sbom.mjs",
+        "test:sbom": "node --test test/generate-sbom.test.mjs",
+        "check:backend-architecture": "npm --prefix backend run check:architecture"
+    }
 }

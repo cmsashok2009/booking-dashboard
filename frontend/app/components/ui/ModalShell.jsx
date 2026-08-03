@@ -6,6 +6,7 @@ export default function ModalShell({
   open = true,
   onClose,
   className = "",
+  backdropClassName = "",
   ariaLabelledBy,
   ariaDescribedBy,
   closeDisabled = false,
@@ -20,7 +21,7 @@ export default function ModalShell({
 
   return (
     <div
-      className={`modal-backdrop ${nested ? "nested-modal-backdrop" : ""}`.trim()}
+      className={`modal-backdrop ${nested ? "nested-modal-backdrop" : ""} ${backdropClassName}`.trim()}
       onMouseDown={(event) => event.target === event.currentTarget && !closeDisabled && onClose?.()}
     >
       <section

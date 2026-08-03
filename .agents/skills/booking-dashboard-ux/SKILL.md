@@ -35,4 +35,15 @@ Identify changed user goals, roles, states, and irreversible actions before impl
 - `UX-024` Commands, fields, and messages match the signed-in role.
 - `UX-025` Format, merge-field, validation, and expiry help appears at decision points.
 
+## Modal Workflow Gate
+
+Use a modal only for a user-initiated interruption that requires acknowledgement, input, confirmation, or an immediate recovery decision. Do not use a modal for passive success, information, or ordinary warning/error feedback that can remain in page context.
+
+For every new or changed modal, agents must verify:
+
+- The title describes the interrupted task; body copy states cause, preserved state, consequence, prerequisite work, and next action without implementation jargon.
+- Provide a visible close control, Escape close, and a plainly labelled secondary escape action. Avoid ambiguous Cancel/Continue wording.
+- Initial focus lands on the safest action, focus remains trapped, close restores the trigger, and the recovery action leads directly to the required work.
+- The modal does not perform hidden mutations. Retry/resume paths remain idempotent and preserve completed work.
+- Validate the complete keyboard path plus desktop and mobile recovery paths in a real browser, including expected server-conflict behavior and absence of duplicate toast/modal feedback.
 Use `N/A` only with a concrete reason. Include browser viewport, keyboard path, and screenshot/test evidence.

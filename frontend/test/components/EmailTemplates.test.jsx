@@ -40,6 +40,13 @@ describe("email template management", () => {
       user: { id: "u1" },
       samples: [sample],
       templates: [template],
+      pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1, hasNextPage: false },
+      summary: { total: 1, active: 1, draft: 0 },
+      filters: { search: "", status: "" },
+      page: 1,
+      setPage: vi.fn(),
+      updateFilters: vi.fn(),
+      reload: vi.fn(),
       onReload: vi.fn(),
       onReturnToOnboarding: vi.fn(),
       setNotice: vi.fn(),
@@ -92,6 +99,33 @@ describe("email template management", () => {
     expect(screen.getByText("No organization templates yet")).toBeInTheDocument();
   });
 
+  it("delegates server filters and renders controlled paging and recovery states", async () => {
+    const values = props({
+      templates: Array.from({ length: 10 }, (_, index) => ({
+        ...template,
+        id: `t${index}`,
+        name: `Template ${index}`
+      })),
+      pagination: { page: 1, pageSize: 10, total: 12, totalPages: 2, hasNextPage: true },
+      summary: { total: 12, active: 8, draft: 4 }
+    });
+    const view = render(<EmailTemplatesView {...values} />);
+    expect(screen.getByText("8 active templates are available for user onboarding.")).toBeInTheDocument();
+    expect(screen.getByText("1-10 of 12")).toBeInTheDocument();
+    await userEvent.type(screen.getByPlaceholderText("Search name or subject"), "Welcome");
+    expect(values.updateFilters).toHaveBeenCalledWith({ search: "W" });
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Status" }), "draft");
+    expect(values.updateFilters).toHaveBeenLastCalledWith({ status: "draft" });
+    await userEvent.click(screen.getByTitle("Next page"));
+    expect(values.setPage).toHaveBeenCalledWith(2);
+
+    view.rerender(<EmailTemplatesView {...props({ templates: [], loading: true })} />);
+    expect(screen.getByRole("heading", { name: "Loading organization templates" })).toBeInTheDocument();
+    const retry = vi.fn();
+    view.rerender(<EmailTemplatesView {...props({ templates: [], error: "Dependency unavailable", reload: retry })} />);
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(retry).toHaveBeenCalledOnce();
+  });
   it("normalizes clone errors and supports returning to onboarding", async () => {
     const values = props({ returnWorkflowId: "w1" });
     request.mockRejectedValueOnce(new Error("Clone failed"));

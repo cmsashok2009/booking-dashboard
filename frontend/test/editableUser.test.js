@@ -4,7 +4,14 @@ import { test } from "vitest";
 import { editableUserValues, validateEditableUser } from "../app/features/users/editableUser.js";
 
 test("editable user values normalize absent fields", () => {
-  assert.deepEqual(editableUserValues({ name: "A" }), { name: "A", email: "", role: "", region: "", status: "" });
+  assert.deepEqual(editableUserValues({ name: "A" }), {
+    name: "A",
+    email: "",
+    role: "",
+    region: "",
+    dealerCode: "",
+    status: ""
+  });
 });
 
 test("editable user validation rejects missing and malformed fields", () => {

@@ -121,7 +121,7 @@ button.app-button.icon-button:focus-visible {
   animation: notification-fade-in 160ms ease-out;
 }
 
-.notification-drawer {
+.side-drawer.notification-drawer {
   width: min(440px, 100%);
   height: 100dvh;
   display: flex;
@@ -169,6 +169,36 @@ button.app-button.icon-button:focus-visible {
 .notification-drawer-content {
   flex: 1;
   overflow-y: auto;
+}
+
+.notification-stale-status {
+  margin: 12px 16px;
+}
+
+.notification-loading-state,
+.notification-error-state {
+  min-height: 260px;
+  padding: 32px 20px;
+}
+
+.notification-drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--color-panel);
+}
+
+.notification-drawer-footer > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.notification-drawer-footer .app-button {
+  flex: 0 0 auto;
 }
 
 .notification-group {
@@ -319,7 +349,7 @@ button.app-button.icon-button:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .notification-drawer-backdrop,
-  .notification-drawer {
+  .side-drawer.notification-drawer {
     animation: none;
   }
 }
@@ -707,6 +737,7 @@ button.app-button.profile-trigger[aria-expanded="true"] {
 }
 
 .info-tooltip-content {
+  display: none;
   position: absolute;
   bottom: calc(100% + 9px);
   left: 50%;
@@ -744,6 +775,7 @@ button.app-button.profile-trigger[aria-expanded="true"] {
 
 .info-tooltip:hover .info-tooltip-content,
 .info-tooltip:focus-within .info-tooltip-content {
+  display: block;
   transform: translate(-50%, 0);
   opacity: 1;
   visibility: visible;

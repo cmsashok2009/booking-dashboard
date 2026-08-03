@@ -90,16 +90,27 @@ export default function AdminTemporaryPasswordDrawer({ user, onClose, onUserUpda
             </p>
           </div>
           <footer className="admin-temporary-password-footer">
-            <Button type="button" onClick={onClose}>Done</Button>
+            <Button type="button" onClick={onClose}>
+              Done
+            </Button>
           </footer>
         </div>
       ) : (
         <form className="admin-temporary-password-form" onSubmit={submit} noValidate>
           <div className="admin-temporary-password-body">
             <dl className="admin-temporary-password-user">
-              <div><dt>User</dt><dd>{user.name}</dd></div>
-              <div><dt>Email</dt><dd>{user.email}</dd></div>
-              <div><dt>Status</dt><dd>{user.status}</dd></div>
+              <div>
+                <dt>User</dt>
+                <dd>{user.name}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{user.email}</dd>
+              </div>
+              <div>
+                <dt>Status</dt>
+                <dd>{user.status}</dd>
+              </div>
             </dl>
             <PasswordFields
               password={password}
@@ -113,15 +124,31 @@ export default function AdminTemporaryPasswordDrawer({ user, onClose, onUserUpda
             <p className="field-hint">The password is never displayed again or included in logs.</p>
             {activating ? (
               <div className="activation-warning" role="note">
-                This immediately activates the account and revokes any outstanding email activation link. The user must change this password after signing in.
+                This immediately activates the account and revokes any outstanding email activation link. The user must
+                change this password after signing in.
               </div>
             ) : null}
-            {!eligible ? <div className="activation-error" role="alert">Only active or pending-invitation users are eligible.</div> : null}
-            {error ? <div className="activation-error" role="alert">{error}</div> : null}
+            {!eligible ? (
+              <div className="activation-error" role="alert">
+                Only active or pending-invitation users are eligible.
+              </div>
+            ) : null}
+            {error ? (
+              <div className="activation-error" role="alert">
+                {error}
+              </div>
+            ) : null}
           </div>
           <footer className="admin-temporary-password-footer">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" busy={saving} busyLabel={activating ? "Activating account..." : "Setting password..."} disabled={!eligible}>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              busy={saving}
+              busyLabel={activating ? "Activating account..." : "Setting password..."}
+              disabled={!eligible}
+            >
               {activating ? "Activate and set password" : "Set temporary password"}
             </Button>
           </footer>

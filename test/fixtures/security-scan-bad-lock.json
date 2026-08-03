@@ -1,0 +1,13 @@
+{
+  "name": "security-scan-bad-lock",
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "security-scan-bad-lock"
+    },
+    "node_modules/bad": {
+      "version": "1.0.0",
+      "resolved": "https://example.invalid/bad-1.0.0.tgz"
+    }
+  }
+}

@@ -241,6 +241,7 @@ button.app-button.outline:disabled {
   background: var(--palette-fff8eb);
   color: var(--palette-5f6878);
 }
+
 .single-user-drawer .activation-warning {
   display: flex;
   align-items: center;
@@ -302,6 +303,27 @@ button.app-button.outline:disabled {
   align-content: start;
 }
 
+.single-user-drawer-body.form-grid {
+  align-items: start;
+  gap: 18px 16px;
+}
+
+.single-user-drawer-body.form-grid > .field > label {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.single-user-drawer-body .app-input,
+.single-user-drawer-body .app-select {
+  height: var(--control-height);
+}
+
+.single-user-dealer-field {
+  grid-column: 1 / -1;
+  width: calc(50% - 8px);
+}
+
 .single-user-drawer-footer {
   flex: 0 0 auto;
   display: flex;
@@ -328,6 +350,12 @@ button.app-button.outline:disabled {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+}
+
+@media (width <= 900px) {
+  .single-user-dealer-field {
+    width: 100%;
+  }
 }
 
 @media (width <= 520px) {
@@ -392,7 +420,7 @@ button.app-button.outline:disabled {
   overflow-y: auto;
 }
 
-@media (max-width: 760px) {
+@media (width <= 760px) {
   .side-drawer.onboarding-drawer {
     width: 100vw;
   }

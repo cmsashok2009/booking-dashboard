@@ -26,7 +26,7 @@ export default function GroupedTabs({ label, groups, value, onChange, controls, 
           })}
         </TabList>
       ) : null}
-      <TabList label={`${activeGroup.label} sections`} className="grouped-tabs-children">
+      <TabList id={`${idPrefix}-children`} label={`${activeGroup.label} sections`} className="grouped-tabs-children">
         {activeGroup.items.map((item) => (
           <Tab
             key={item.value}

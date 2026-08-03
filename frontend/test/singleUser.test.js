@@ -16,7 +16,7 @@ test("single-user requirements derive region and reporting hierarchy", () => {
   assert.deepEqual(getSingleUserRequirements("Area Manager", definitions), {
     needsRegion: true,
     needsManager: true,
-    managerRole: "Regional Manager"
+    managerRole: undefined
   });
   assert.deepEqual(getSingleUserRequirements("Admin", definitions), {
     needsRegion: false,

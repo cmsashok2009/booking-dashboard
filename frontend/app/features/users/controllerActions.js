@@ -6,8 +6,9 @@ export function createUserActions(context) {
   const {
     setUserTable,
     setUserPage,
-    setBootstrap,
-    filteredUsers,
+    updateUserRecord,
+    loadAllUsers,
+    reloadUsers,
     setNotice,
     bootstrap,
     setSingleUserErrors,
@@ -32,16 +33,15 @@ export function createUserActions(context) {
   }
 
   function userUpdated(updatedUser) {
-    setBootstrap((current) => ({
-      ...current,
-      users: current.users.map((item) => (item.id === updatedUser.id ? updatedUser : item))
-    }));
+    updateUserRecord(updatedUser);
+    void reloadUsers();
   }
 
   async function downloadUsers() {
     try {
-      await downloadUsersExcel(filteredUsers);
-      setNotice({ type: "success", message: `${filteredUsers.length} users downloaded.` });
+      const users = await loadAllUsers();
+      await downloadUsersExcel(users);
+      setNotice({ type: "success", message: `${users.length} users downloaded.` });
     } catch (error) {
       setNotice({ type: "error", message: error.message || "Unable to download users." });
     }
@@ -56,6 +56,7 @@ export function createUserActions(context) {
         body: JSON.stringify(buildSingleUserPayload(values, bootstrap?.roleDefinitions || []))
       });
       await loadBootstrap();
+      await reloadUsers();
       setSingleUserModalOpen(false);
       setOnboardingWorkflowId(result.id);
       setBulkUserModalOpen(true);

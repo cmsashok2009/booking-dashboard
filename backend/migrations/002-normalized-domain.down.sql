@@ -1,0 +1,24 @@
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS email_provider_connections;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS file_uploads;
+DROP TABLE IF EXISTS email_delivery_events;
+DROP TABLE IF EXISTS activation_tokens;
+DROP TABLE IF EXISTS email_recipients;
+DROP TABLE IF EXISTS email_campaigns;
+DROP TABLE IF EXISTS email_template_versions;
+DROP TABLE IF EXISTS email_templates;
+DROP TABLE IF EXISTS email_template_samples;
+DROP TABLE IF EXISTS onboarding_workflows;
+DROP TABLE IF EXISTS password_reset_tokens;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS lookup_options;
+DROP TABLE IF EXISTS dealer_assignments;
+DROP TABLE IF EXISTS dealer_codes;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS regions;
+DROP TABLE IF EXISTS roles;
+SET FOREIGN_KEY_CHECKS = 1;
+

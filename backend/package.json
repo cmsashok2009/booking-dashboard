@@ -1,24 +1,36 @@
 {
-    "name":  "booking-dashboard-backend",
-    "version":  "0.1.0",
-    "private":  true,
-    "description":  "Booking dashboard mock API and validation backend.",
-    "type":  "module",
-    "scripts":  {
-                    "dev":  "node server.js",
-                    "start":  "node server.js",
-                    "test":  "node --test",
-                    "test:integration":  "node --test test/infrastructure.integration.test.js",
-                    "migrate:state":  "node scripts/migrate-state-to-mysql.js",
-                    "init:production":  "node scripts/initialize-production-state.js"
-                },
-    "engines":  {
-                    "node":  "\u003e=20"
-                },
-    "dependencies":  {
-                         "dotenv":  "^17.4.2",
-                         "mysql2":  "^3.23.2",
-                         "nodemailer":  "^9.0.3",
-                         "redis":  "^6.2.0"
-                     }
+    "name": "booking-dashboard-backend",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Booking dashboard mock API and validation backend.",
+    "type": "module",
+    "scripts": {
+        "dev": "node server.js",
+        "start": "node server.js",
+        "test": "node --test",
+        "test:integration": "node --test test/infrastructure.integration.test.js",
+        "migrate:state": "node scripts/migrate-state-to-mysql.js",
+        "init:production": "node scripts/initialize-production-state.js",
+        "backup:mysql": "node scripts/mysql-backup.js",
+        "check-backup:mysql": "node scripts/mysql-backup-check.js",
+        "restore:mysql": "node scripts/mysql-restore.js",
+        "recovery:drill": "node scripts/recovery-drill.js",
+        "migration:rollback-drill": "node scripts/migration-rollback-drill.js",
+        "backup:retention-drill": "node scripts/backup-retention-drill.js",
+        "backup:key-recovery-drill": "node scripts/backup-key-recovery-drill.js",
+        "deployment:rollback-drill": "node scripts/deployment-rollback-drill.js",
+        "cleanup-backups:mysql": "node scripts/mysql-backup-cleanup.js",
+        "load:smoke": "node scripts/load-smoke.js",
+        "load:smoke:local": "node scripts/load-smoke.js",
+        "check:architecture": "node scripts/check-architecture.mjs"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "dependencies": {
+        "dotenv": "^17.4.2",
+        "mysql2": "^3.23.2",
+        "nodemailer": "^9.0.3",
+        "redis": "^6.2.0"
+    }
 }

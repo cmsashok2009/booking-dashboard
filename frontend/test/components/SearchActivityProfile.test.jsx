@@ -37,7 +37,7 @@ describe("search and activity surfaces", () => {
     expect(change).toHaveBeenLastCalledWith("Custom", null);
   });
 
-  it("summarizes, filters, expands, and empties delivery campaigns", async () => {
+  it("renders server campaign totals and delegates filters", async () => {
     const campaigns = [
       {
         id: "c1",
@@ -46,48 +46,32 @@ describe("search and activity surfaces", () => {
         total: 1,
         sent: 1,
         failed: 0,
-        recipients: [
-          {
-            id: "r1",
-            name: "Ravi",
-            email: "ravi@example.com",
-            provider: "Graph",
-            status: "sent",
-            sentAt: "2026-08-01T10:01:00Z"
-          }
-        ]
-      },
-      {
-        id: "c2",
-        createdAt: "2026-07-31T10:00:00Z",
-        status: "completed",
-        total: 1,
-        sent: 0,
-        failed: 1,
-        recipients: [
-          {
-            id: "r2",
-            name: "Maya",
-            email: "maya@example.com",
-            provider: "Graph",
-            status: "failed",
-            failureReason: "Rejected"
-          }
-        ]
+        recipients: [{ id: "r1", name: "Ravi", email: "ravi@example.com", provider: "Graph", status: "sent" }]
       }
     ];
-    const view = render(<EmailDeliveryView campaigns={campaigns} />);
-    expect(screen.getByLabelText("Delivery summary")).toHaveTextContent("Emails sent1");
+    const updateFilters = vi.fn();
+    render(
+      <EmailDeliveryView
+        campaigns={campaigns}
+        pagination={{ page: 1, pageSize: 5, total: 1, totalPages: 1 }}
+        summary={{ campaigns: 7, sent: 6, failed: 1 }}
+        filters={{ search: "", status: "all" }}
+        page={1}
+        setPage={vi.fn()}
+        updateFilters={updateFilters}
+        reload={vi.fn()}
+      />
+    );
+    expect(screen.getByLabelText("Delivery summary")).toHaveTextContent("Campaigns7Emails sent6Failed1");
     await userEvent.type(screen.getByPlaceholderText("Search recipient or email"), "Maya");
-    expect(screen.getByText("1 campaign")).toBeInTheDocument();
+    expect(updateFilters).toHaveBeenCalledWith({ search: "M" });
     await userEvent.selectOptions(screen.getByRole("combobox"), "successful");
-    expect(screen.getByText("No matching campaigns")).toBeInTheDocument();
-    view.rerender(<EmailDeliveryView campaigns={[]} />);
-    expect(screen.getByText("No invitation campaigns yet")).toBeInTheDocument();
+    expect(updateFilters).toHaveBeenLastCalledWith({ status: "successful" });
+    expect(screen.getByText("1 campaign")).toBeInTheDocument();
   });
 
-  it("shows the five newest delivery campaigns first and paginates older campaigns", async () => {
-    const campaigns = Array.from({ length: 7 }, (_, index) => ({
+  it("renders controlled pagination and recoverable loading and error states", async () => {
+    const campaigns = Array.from({ length: 5 }, (_, index) => ({
       id: `campaign-${index + 1}`,
       createdAt: `2026-08-0${index + 1}T10:00:00Z`,
       status: "completed",
@@ -96,19 +80,31 @@ describe("search and activity surfaces", () => {
       failed: 0,
       recipients: []
     }));
-
-    render(<EmailDeliveryView campaigns={campaigns} />);
-
-    const firstPage = screen.getAllByText("Activation campaign");
-    expect(firstPage).toHaveLength(5);
-    expect(firstPage[0].closest("details")).toHaveTextContent(new Date("2026-08-07T10:00:00Z").toLocaleString());
+    const setPage = vi.fn();
+    const reload = vi.fn();
+    const values = {
+      campaigns,
+      pagination: { page: 1, pageSize: 5, total: 7, totalPages: 2 },
+      summary: { campaigns: 7, sent: 7, failed: 0 },
+      filters: { search: "", status: "all" },
+      page: 1,
+      setPage,
+      updateFilters: vi.fn(),
+      reload
+    };
+    const view = render(<EmailDeliveryView {...values} />);
+    expect(screen.getAllByText("Activation campaign")).toHaveLength(5);
     expect(screen.getByText("1-5 of 7")).toBeInTheDocument();
-
     await userEvent.click(screen.getByTitle("Next page"));
-    const secondPage = screen.getAllByText("Activation campaign");
-    expect(secondPage).toHaveLength(2);
-    expect(secondPage[1].closest("details")).toHaveTextContent(new Date("2026-08-01T10:00:00Z").toLocaleString());
-    expect(screen.getByText("6-7 of 7")).toBeInTheDocument();
+    expect(setPage).toHaveBeenCalledWith(2);
+
+    view.rerender(<EmailDeliveryView {...values} campaigns={[]} loading />);
+    expect(screen.getByRole("heading", { name: "Loading delivery campaigns" })).toBeInTheDocument();
+    view.rerender(<EmailDeliveryView {...values} campaigns={[]} error="Dependency unavailable" />);
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(reload).toHaveBeenCalledOnce();
+    view.rerender(<EmailDeliveryView {...values} campaigns={[]} summary={{ campaigns: 0, sent: 0, failed: 0 }} />);
+    expect(screen.getByText("No invitation campaigns yet")).toBeInTheDocument();
   });
   it("groups notifications, opens records, and closes by keyboard and backdrop", async () => {
     const close = vi.fn(),
@@ -144,6 +140,58 @@ describe("search and activity surfaces", () => {
     expect(screen.getByText("No unread updates")).toBeInTheDocument();
   });
 
+  it("shows exact notification totals, stale recovery, and load-more controls", async () => {
+    const retry = vi.fn();
+    const loadMore = vi.fn();
+    const notifications = [
+      {
+        id: "n1",
+        actorRole: "Area Manager",
+        actorName: "Ravi",
+        salesOrderId: "SO1",
+        changedFields: []
+      },
+      {
+        id: "n2",
+        actorRole: "Regional Manager",
+        actorName: "Maya",
+        salesOrderId: "SO2",
+        changedFields: []
+      }
+    ];
+    const view = render(
+      <NotificationDrawer
+        open
+        notifications={notifications}
+        unreadCount={25}
+        pagination={{ page: 1, pageSize: 20, total: 25, totalPages: 2, hasNextPage: true }}
+        error="Refresh failed"
+        onRetry={retry}
+        onLoadMore={loadMore}
+        onClose={vi.fn()}
+        onOpenNotification={vi.fn()}
+      />
+    );
+    expect(screen.getByText("25 unread updates")).toBeInTheDocument();
+    expect(screen.getByText("Showing 2 of 25")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Loaded updates remain available");
+    await userEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await userEvent.click(screen.getByRole("button", { name: "Load more" }));
+    expect(retry).toHaveBeenCalledOnce();
+    expect(loadMore).toHaveBeenCalledOnce();
+
+    view.rerender(
+      <NotificationDrawer
+        open
+        notifications={[]}
+        unreadCount={0}
+        loading
+        onClose={vi.fn()}
+        onOpenNotification={vi.fn()}
+      />
+    );
+    expect(screen.getByRole("heading", { name: "Loading notifications" })).toBeInTheDocument();
+  });
   it("validates and saves profile photo changes", async () => {
     const saved = vi.fn();
     const user = { name: "Admin", avatarUrl: "data:image/png;base64,AA" };

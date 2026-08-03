@@ -1,23 +1,24 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import BrandLogo from "../../components/BrandLogo";
 import CloseButton from "../../components/ui/CloseButton";
 import SideDrawer from "../../components/ui/SideDrawer";
-import EmailDeliveryView from "../../components/EmailDeliveryView";
-import EmailSettingsView from "../../components/EmailSettingsView";
-import EmailTemplatesView from "../../components/EmailTemplatesView";
 import FeatureErrorBoundary from "../../components/FeatureErrorBoundary";
 import InsightBarChart from "../../components/InsightBarChart";
-import ReconciliationDashboard from "../../components/ReconciliationDashboard";
 import Topbar from "../../components/Topbar";
 import { detailTitle } from "../../utils/bookings";
-import { AreaFieldsWorkspace } from "../area-fields";
-import { BookingWorkspace } from "../bookings";
-import { UsersWorkspace } from "../users";
 import DashboardMetrics from "./DashboardMetrics";
 import EmailManagementTabs, { EMAIL_MANAGEMENT_VIEWS } from "./EmailManagementTabs";
 import DashboardNavigation from "./DashboardNavigation";
+const AreaFieldsWorkspace = dynamic(() => import("../area-fields").then((module) => module.AreaFieldsWorkspace));
+const BookingWorkspace = dynamic(() => import("../bookings").then((module) => module.BookingWorkspace));
+const UsersWorkspace = dynamic(() => import("../users").then((module) => module.UsersWorkspace));
+const EmailDeliveryView = dynamic(() => import("../../components/EmailDeliveryView"));
+const EmailSettingsView = dynamic(() => import("../../components/EmailSettingsView"));
+const EmailTemplatesView = dynamic(() => import("../../components/EmailTemplatesView"));
+const ReconciliationDashboard = dynamic(() => import("../../components/ReconciliationDashboard"));
 
 function PageTopbar({ title, subtitle, state, actions }) {
   return (
@@ -26,7 +27,7 @@ function PageTopbar({ title, subtitle, state, actions }) {
       subtitle={subtitle}
       user={state.user}
       notice={state.notice}
-      notificationCount={state.notifications.length}
+      notificationCount={state.notificationCount}
       notificationsOpen={state.notificationDrawerOpen}
       onNotificationsClick={actions.openNotifications}
       onEditProfile={actions.openProfilePhoto}
@@ -144,7 +145,7 @@ export default function DashboardShell({ state, actions, models, overlays }) {
                 ) : null}
                 {activeView === "email-delivery" ? (
                   <FeatureErrorBoundary name="Email delivery" resetKey={activeView}>
-                    <EmailDeliveryView campaigns={models.email.campaigns} />
+                    <EmailDeliveryView {...models.email.campaigns} />
                   </FeatureErrorBoundary>
                 ) : null}
                 {activeView === "email-settings" ? (

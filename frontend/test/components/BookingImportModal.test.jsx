@@ -30,9 +30,22 @@ describe("BookingImportModal", () => {
   it("renders the parsed preview without changing its values", () => {
     renderModal();
     expect(screen.getByRole("heading", { name: "Upload bookings" })).toBeInTheDocument();
+    expect(screen.getByText("Booking CSV ready")).toBeInTheDocument();
+    expect(screen.getByText("bookings.csv - validated before import")).toBeInTheDocument();
+    expect(screen.getByText("Replace file")).toBeInTheDocument();
     expect(screen.getByText("SOB1001")).toBeInTheDocument();
     expect(screen.getByText("North")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload 1 preview rows" })).toBeInTheDocument();
+  });
+
+  it("shows the booking table structure before a file is selected", () => {
+    renderModal({ preview: null, pendingUpload: null });
+
+    expect(screen.getByRole("columnheader", { name: "Dealer Code" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "COMB1" })).toBeInTheDocument();
+    expect(screen.getByText("No data found")).toBeInTheDocument();
+    expect(screen.getByText("Choose a CSV or use sample data to preview bookings.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Upload .* preview rows/ })).not.toBeInTheDocument();
   });
 
   it("delegates sample, remove, upload, and close actions", async () => {

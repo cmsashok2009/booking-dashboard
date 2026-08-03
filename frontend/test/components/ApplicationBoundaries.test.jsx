@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import AppErrorBoundary from "../../app/components/AppErrorBoundary";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
+import { BlockingDependencyModal } from "../../app/components/ui";
 import GlobalApiActivity from "../../app/components/GlobalApiActivity";
 import InsightBarChart from "../../app/components/InsightBarChart";
 import Pagination from "../../app/components/Pagination";
@@ -78,6 +79,30 @@ describe("shared workflow components", () => {
     expect(confirm).toHaveBeenCalledOnce();
     rerender(<ConfirmationModal open busy title="Working" description="Wait" onClose={close} onConfirm={confirm} />);
     expect(screen.getByRole("button", { name: /Processing/ })).toBeDisabled();
+  });
+
+  it("explains blocking dependencies and delegates recovery without destructive confirmation", async () => {
+    const close = vi.fn();
+    const review = vi.fn();
+    render(
+      <BlockingDependencyModal
+        open
+        title="Region cannot be deactivated"
+        description="Review active Dealer Codes before trying again."
+        detailLabel="Region"
+        detailValue="North"
+        actionLabel="View Dealer Codes"
+        onClose={close}
+        onAction={review}
+      />
+    );
+
+    const dialog = screen.getByRole("alertdialog", { name: "Region cannot be deactivated" });
+    expect(dialog).toHaveAccessibleDescription("Review active Dealer Codes before trying again.");
+    expect(dialog).toHaveTextContent("North");
+    await userEvent.click(screen.getByRole("button", { name: "View Dealer Codes" }));
+    expect(review).toHaveBeenCalledOnce();
+    expect(close).not.toHaveBeenCalled();
   });
 
   it("navigates every pagination control and renders ellipses", async () => {

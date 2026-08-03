@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { googleEmailStatus, sendWithGmailApi } from "./google-email-provider.js";
+import { emailDeliveryPolicy, executeEmailDelivery } from "./email-delivery-policy.js";
 
 let cachedTransporter = null;
 let cachedTransportKey = "";
@@ -33,6 +34,7 @@ function missingSmtpFields(config) {
 function smtpTransporter(config) {
   const key = [config.host, config.port, config.secure, config.user, config.password].join("|");
   if (cachedTransporter && cachedTransportKey === key) return cachedTransporter;
+  const timeoutMs = emailDeliveryPolicy().timeoutMs;
   cachedTransporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
@@ -86,9 +88,9 @@ export async function verifyEmailTransport(db) {
   return { ...status, verified: true };
 }
 
-export async function deliverEmail({ to, subject, text, html }, { db } = {}) {
+export async function deliverEmail({ to, subject, text, html }, { db, signal } = {}) {
   const config = readConfig();
-  if (config.mode === "gmail_api") return sendWithGmailApi(db, { to, subject, text, html });
+  if (config.mode === "gmail_api") return sendWithGmailApi(db, { to, subject, text, html }, { signal });
   if (config.mode !== "smtp") {
     return { provider: "local-mock", reference: `mock-${Date.now()}`, accepted: [to], rejected: [] };
   }
@@ -118,4 +120,11 @@ export async function deliverEmail({ to, subject, text, html }, { db } = {}) {
     accepted: info.accepted || [to],
     rejected: info.rejected || []
   };
+}
+
+export async function deliverEmailWithPolicy(message, { db, policy, sleep, random, deliver = deliverEmail } = {}) {
+  return executeEmailDelivery(
+    ({ signal }) => deliver(message, { db, signal }),
+    { policy, sleep, random }
+  );
 }

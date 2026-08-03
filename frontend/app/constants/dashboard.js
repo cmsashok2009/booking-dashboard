@@ -33,6 +33,8 @@ export const excelColumns = [
   ["regionalInputs.retailInput", "Retail Input"]
 ];
 
+export const bookingUploadHeaders = excelColumns.slice(0, 23).map(([, label]) => label);
+
 export const lookupFieldLabels = {
   roles: "Roles",
   regions: "Regions",
