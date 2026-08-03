@@ -165,19 +165,24 @@ export default function EditableUsersTable({
           <thead>
             <tr>
               {[
-                ["name", "Name"],
-                ["email", "Email"],
-                ["role", "Role"],
-                ["region", "Region"],
-                ["status", "Status"]
-              ].map(([key, label]) => (
+                ["name", "Name", true],
+                ["email", "Email", true],
+                ["role", "Role", true],
+                ["region", "Region", true],
+                ["dealerCode", "Dealer Code", false],
+                ["status", "Status", true]
+              ].map(([key, label, sortable]) => (
                 <th key={key}>
-                  <button className="sort-link" type="button" onClick={() => onSort(key)}>
-                    {label}
-                    <span>
-                      {sortState.key === key ? (sortState.direction === "asc" ? "\u25B2" : "\u25BC") : "\u2195"}
-                    </span>
-                  </button>
+                  {sortable ? (
+                    <button className="sort-link" type="button" onClick={() => onSort(key)}>
+                      {label}
+                      <span>
+                        {sortState.key === key ? (sortState.direction === "asc" ? "\u25B2" : "\u25BC") : "\u2195"}
+                      </span>
+                    </button>
+                  ) : (
+                    label
+                  )}
                 </th>
               ))}
               <th className="user-action-column">Action</th>
@@ -268,6 +273,16 @@ export default function EditableUsersTable({
                     </td>
                     <td>
                       {editing ? (
+                        <div className="linked-dealer-code">
+                          <strong>{draft.dealerCode || "Not assigned"}</strong>
+                          <span className="field-hint">Edited with Region</span>
+                        </div>
+                      ) : (
+                        user.dealerCode || "Not assigned"
+                      )}
+                    </td>
+                    <td>
+                      {editing ? (
                         lifecycleStatus ? (
                           <div className="lifecycle-status-readonly">
                             <span className={`status-dot ${user.status}`}>{displayValue(user.status)}</span>
@@ -318,7 +333,7 @@ export default function EditableUsersTable({
               })
             ) : (
               <tr>
-                <td className="empty-state" colSpan="6">
+                <td className="empty-state" colSpan="7">
                   No users match the current filters.
                 </td>
               </tr>

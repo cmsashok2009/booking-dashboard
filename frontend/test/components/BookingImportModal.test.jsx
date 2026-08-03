@@ -22,8 +22,8 @@ function renderModal(overrides = {}) {
     onUpload: vi.fn(),
     ...overrides
   };
-  render(<BookingImportModal {...props} />);
-  return props;
+  const view = render(<BookingImportModal {...props} />);
+  return { ...props, ...view };
 }
 
 describe("BookingImportModal", () => {
@@ -34,8 +34,27 @@ describe("BookingImportModal", () => {
     expect(screen.getByText("bookings.csv - validated before import")).toBeInTheDocument();
     expect(screen.getByText("Replace file")).toBeInTheDocument();
     expect(screen.getByText("SOB1001")).toBeInTheDocument();
-    expect(screen.getByText("North")).toBeInTheDocument();
+    expect(screen.getByText("North")).toHaveAttribute("title", "North");
+    expect(document.querySelector(".booking-preview-empty-overlay")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload 1 preview rows" })).toBeInTheDocument();
+  });
+
+  it("expands columns from sampled content within safe bounds", () => {
+    const { container } = renderModal({
+      preview: {
+        fileName: "bookings.csv",
+        headers: ["AM", "Retail Input"],
+        rows: [["ashok", "Retail follow-up planned for North region."]]
+      }
+    });
+    const table = container.querySelector(".booking-preview-table table");
+    const columns = container.querySelectorAll(".booking-preview-table col");
+    const columnWidths = [...columns].map((column) => Number.parseInt(column.style.width, 10));
+
+    expect(columnWidths[0]).toBeLessThan(columnWidths[1]);
+    expect(columnWidths[1]).toBeGreaterThanOrEqual(280);
+    expect(columnWidths[1]).toBeLessThanOrEqual(340);
+    expect(Number.parseInt(table.style.width, 10)).toBe(columnWidths.reduce((total, width) => total + width, 0));
   });
 
   it("shows the booking table structure before a file is selected", () => {
@@ -44,6 +63,7 @@ describe("BookingImportModal", () => {
     expect(screen.getByRole("columnheader", { name: "Dealer Code" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "COMB1" })).toBeInTheDocument();
     expect(screen.getByText("No data found")).toBeInTheDocument();
+    expect(screen.getByText("No data found").closest(".booking-preview-empty-overlay")).toBeInTheDocument();
     expect(screen.getByText("Choose a CSV or use sample data to preview bookings.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Upload .* preview rows/ })).not.toBeInTheDocument();
   });

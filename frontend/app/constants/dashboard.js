@@ -50,6 +50,7 @@ export const userTableColumns = [
   ["email", "Email"],
   ["role", "Role"],
   ["region", "Region"],
+  ["dealerCode", "Dealer Code"],
   ["reportingManagerEmail", "Reporting Manager"],
   ["status", "Status"]
 ];

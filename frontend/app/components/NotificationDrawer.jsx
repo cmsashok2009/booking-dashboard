@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
 import { Button, CloseButton, ErrorState, LoadingState, SideDrawer } from "./ui";
 
@@ -99,30 +99,33 @@ export default function NotificationDrawer({
                 <span className="notification-group-count">{items.length}</span>
               </summary>
               <div className="notification-list">
-                {items.map((notification) => (
-                  <button
-                    className="notification-item"
-                    type="button"
-                    key={notification.id}
-                    onClick={() => onOpenNotification(notification)}
-                  >
-                    <span className="notification-item-dot" aria-hidden="true" />
-                    <span className="notification-item-body">
-                      <span className="notification-item-title">
-                        {notification.title || `${notification.actorName} updated ${notification.salesOrderId}`}
+                {items.map((notification) => {
+                  const title =
+                    notification.title || `${notification.actorName} updated ${notification.salesOrderId}`;
+                  const eventLabel =
+                    (notification.changedFields || []).map((field) => field.label).join(", ") || "Booking update";
+                  return (
+                    <button
+                      className="notification-item"
+                      type="button"
+                      key={notification.id}
+                      aria-label={`Unread notification: ${title}. Open booking`}
+                      onClick={() => onOpenNotification(notification)}
+                    >
+                      <span className="notification-item-dot" aria-hidden="true" />
+                      <span className="notification-item-body">
+                        <span className="notification-item-title">{title}</span>
+                        <span className="notification-item-meta">{eventLabel}</span>
+                        <time className="notification-item-time" dateTime={notification.createdAt || undefined}>
+                          {formatTimestamp(notification.createdAt)}
+                        </time>
                       </span>
-                      <span className="notification-item-meta">
-                        {(notification.changedFields || []).map((field) => field.label).join(", ")}
+                      <span className="notification-item-action" aria-hidden="true">
+                        <ChevronRight />
                       </span>
-                      <span className="notification-item-footer">
-                        <span>{formatTimestamp(notification.createdAt)}</span>
-                        <span>
-                          Open booking <span aria-hidden="true">-&gt;</span>
-                        </span>
-                      </span>
-                    </span>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </details>
           ))

@@ -5,6 +5,26 @@ import { request, requestText } from "../../utils/api";
 
 const EMPTY_BOOKING_FILTERS = { search: "", region: "", wholesaleInput: "", retailInput: "" };
 
+export function summarizeBookingUploadErrors(errors = []) {
+  const grouped = new Map();
+  errors.forEach((item) => {
+    const column = item.columnName || "Row";
+    const message = item.errorMessage || "The value is invalid.";
+    const key = `${column}\u0000${message}`;
+    const current = grouped.get(key) || { column, message, count: 0 };
+    current.count += 1;
+    grouped.set(key, current);
+  });
+
+  const summaries = [...grouped.values()].slice(0, 3).map(({ column, message, count }) => {
+    const affected = count > 1 ? ` (${count} rows affected)` : "";
+    return `${column}: ${message}${affected}`;
+  });
+  const remaining = grouped.size - summaries.length;
+  if (remaining > 0) summaries.push(`Review ${remaining} additional validation issue${remaining === 1 ? "" : "s"}.`);
+  return summaries.join(" ");
+}
+
 export function createBookingActions(context) {
   const {
     bookingFilters,
@@ -67,11 +87,11 @@ export function createBookingActions(context) {
       });
       return true;
     } catch (error) {
-      const details = error.payload?.errors
-        ?.slice(0, 4)
-        .map((item) => `${item.columnName}: ${item.errorMessage}`)
-        .join("; ");
-      setNotice({ message: details || error.message, type: "error" });
+      const details = summarizeBookingUploadErrors(error.payload?.errors);
+      setNotice({
+        message: details || error.message,
+        type: "error"
+      });
       return false;
     }
   }

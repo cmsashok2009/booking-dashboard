@@ -1,7 +1,7 @@
 # Quality Report: Compact Booking Import Preview
 
 - Date: 2026-08-03
-- Changed surface: Booking upload modal header, one-row import toolbar, selected-file control, preview viewport, sticky footer, and component coverage.
+- Changed surface: Booking upload modal header, one-row import toolbar, selected-file control, always-present preview table with viewport-anchored empty overlay, hybrid domain/content widths enforced by a summed fixed-layout table width with three-line disclosure, sticky footer, and component coverage.
 - Applicable controls: UI-003-007, UI-010-012, UI-015-020, UI-025; UX-001, UX-003, UX-013-015, UX-020, UX-025.
 - API controls: N/A; no backend, persistence, integration, security, or contract behavior changed.
 
@@ -18,10 +18,10 @@
 
 ## Verification
 
-- `vitest run test/components/BookingImportModal.test.jsx --maxWorkers=2`: 2/2 passed.
+- `vitest run test/components/BookingImportModal.test.jsx --maxWorkers=2`: modal coverage 4/4 and prior modal/CSV coverage 11/11 passed, including adaptive width bounds, empty state, full-value disclosure, and BOM normalization.
 - ESLint on changed JSX/test: passed.
 - Stylelint on `05-workflow-controls.css`: passed.
-- Next.js production build: passed after the compact inline header, single-row desktop toolbar, and sticky footer follow-ups.
+- Next.js production build and Docker frontend rebuild passed after the compact header/toolbar, sticky footer, empty table, adaptive widths, and deduplicated upload-error follow-ups.
 - Browser evidence: BLOCKED by `windows sandbox failed: helper_unknown_error: apply deny-read ACLs`.
 
 ## Result

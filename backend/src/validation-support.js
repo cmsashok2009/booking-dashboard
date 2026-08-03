@@ -1,4 +1,5 @@
 import {
+  assignmentFromBooking,
   dealerAssignmentForCode,
   validateDealerAssignments,
 } from "./dealer-assignments.js";
@@ -150,6 +151,17 @@ export function bookingFromRow(row, existing = {}, assignment = null) {
     importedAt: new Date().toISOString(),
   };
 }
+function assignmentForRow(db, row) {
+  return (
+    dealerAssignmentForCode(db, row["Dealer Code"]) ||
+    assignmentFromBooking(db, {
+      dealerCode: row["Dealer Code"],
+      region: row.Region,
+      amNameFromFile: row.AM,
+    })
+  );
+}
+
 export function upsertBookings(db, rows, options = {}) {
   const validation = validateBookingRows(
     rows,
@@ -186,7 +198,7 @@ export function upsertBookings(db, rows, options = {}) {
       db.bookings[index] = bookingFromRow(
         row,
         db.bookings[index],
-        dealerAssignmentForCode(db, row["Dealer Code"]),
+        assignmentForRow(db, row),
       );
       upload.updatedRows += 1;
     } else {
@@ -194,7 +206,7 @@ export function upsertBookings(db, rows, options = {}) {
         bookingFromRow(
           row,
           {},
-          dealerAssignmentForCode(db, row["Dealer Code"]),
+          assignmentForRow(db, row),
         ),
       );
       upload.insertedRows += 1;

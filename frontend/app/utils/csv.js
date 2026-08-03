@@ -28,5 +28,6 @@ export function parseCsvPreview(input) {
 
   row.push(cell);
   if (row.some((value) => value.trim() !== "")) rows.push(row);
-  return { headers: rows[0] || [], rows: rows.slice(1, 11) };
+  const headers = (rows[0] || []).map((header, index) => (index === 0 ? header.replace(/^\uFEFF/, "") : header));
+  return { headers, rows: rows.slice(1, 11) };
 }

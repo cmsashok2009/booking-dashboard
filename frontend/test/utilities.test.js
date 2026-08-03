@@ -15,6 +15,7 @@ describe("CSV preview parsing", () => {
     expect(preview.headers).toEqual(["Name", "Note"]);
     expect(preview.rows).toHaveLength(10);
     expect(preview.rows[0]).toEqual(["Ravi, Kumar", 'He said "hello"']);
+    expect(parseCsvPreview("\uFEFFDealer Code,Region\n1001,North").headers).toEqual(["Dealer Code", "Region"]);
   });
 
   it("returns an empty preview for empty input and preserves quoted newlines", () => {

@@ -1275,6 +1275,14 @@ test("Notification history is bounded, recoverable, and responsive", async ({ pa
   await expect(page.getByText("Showing 25 of 25")).toBeVisible();
   await expect(page.getByRole("button", { name: "Load more" })).toHaveCount(0);
   await expectNoSeriousAxe(page);
+  const firstNotification = page.getByRole("button", { name: /Unread notification:/ }).first();
+  await firstNotification.hover();
+  const hoverStyle = await firstNotification.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { backgroundColor: style.backgroundColor, color: style.color };
+  });
+  expect(hoverStyle.backgroundColor).toBe("rgb(243, 246, 250)");
+  expect(hoverStyle.color).not.toBe("rgb(255, 255, 255)");
   const overflowAudit = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,

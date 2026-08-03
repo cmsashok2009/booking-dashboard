@@ -130,7 +130,10 @@ describe("search and activity surfaces", () => {
       <NotificationDrawer open notifications={notifications} onClose={close} onOpenNotification={open} />
     );
     expect(screen.getByText("2 unread updates")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /Ravi updated SO1/ }));
+    expect(screen.queryByText("->")).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Unread notification: Ravi updated SO1. Open booking" })
+    );
     expect(open).toHaveBeenCalledWith(notifications[1]);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(close).toHaveBeenCalled();

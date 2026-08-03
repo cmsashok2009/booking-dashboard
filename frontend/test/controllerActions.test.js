@@ -16,7 +16,7 @@ vi.mock("../app/utils/exportExcel", () => ({
 import { createLoginAction, restoreDashboardSession } from "../app/features/dashboard/sessionActions";
 import { createNavigationAction, createShellActions } from "../app/features/dashboard/controllerActions";
 import { createUserActions } from "../app/features/users/controllerActions";
-import { createBookingActions } from "../app/features/bookings/controllerActions";
+import { createBookingActions, summarizeBookingUploadErrors } from "../app/features/bookings/controllerActions";
 
 function setters(names) {
   return Object.fromEntries(names.map((name) => [name, vi.fn()]));
@@ -25,6 +25,22 @@ function setters(names) {
 beforeEach(() => {
   vi.clearAllMocks();
   window.sessionStorage.clear();
+});
+
+describe("booking upload error summaries", () => {
+  it("deduplicates repeated row failures and reports additional groups", () => {
+    expect(
+      summarizeBookingUploadErrors([
+        { columnName: "Dealer Code", errorMessage: "Mapping required" },
+        { columnName: "Dealer Code", errorMessage: "Mapping required" },
+        { columnName: "Region", errorMessage: "Unknown Region" },
+        { columnName: "Model", errorMessage: "Unknown Model" },
+        { columnName: "Variant", errorMessage: "Unknown Variant" }
+      ])
+    ).toBe(
+      "Dealer Code: Mapping required (2 rows affected) Region: Unknown Region Model: Unknown Model Review 1 additional validation issue."
+    );
+  });
 });
 
 describe("login action", () => {
@@ -413,11 +429,20 @@ describe("booking actions", () => {
     const failed = context();
     mocks.request.mockRejectedValueOnce({
       message: "Invalid",
-      payload: { errors: [{ columnName: "Model", errorMessage: "Unknown" }] }
+      payload: {
+        errors: Array.from({ length: 5 }, () => ({
+          columnName: "Dealer Code",
+          errorMessage: "Dealer Code does not have an active Area Manager mapping"
+        }))
+      }
     });
     await createBookingActions(failed).submitBookingUpload();
     expect(failed.setBookingUploadModalOpen).not.toHaveBeenCalled();
-    expect(failed.setNotice).toHaveBeenLastCalledWith({ message: "Model: Unknown", type: "error" });
+    expect(failed.setNotice).toHaveBeenLastCalledWith({
+      message:
+        "Dealer Code: Dealer Code does not have an active Area Manager mapping (5 rows affected)",
+      type: "error"
+    });
 
     const empty = context({ pendingBookingUpload: null });
     await createBookingActions(empty).submitBookingUpload();

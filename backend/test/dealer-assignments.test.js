@@ -40,6 +40,36 @@ test("import rejects an unmapped dealer instead of silently assigning a manager"
   assert.equal(db.bookings.some((booking) => booking.salesOrderId === "SO-UNKNOWN"), false);
 });
 
+test("import resolves an active Area Manager user mapping without requiring a Regional Manager", () => {
+  const db = seedData();
+  db.dealerAssignments = [];
+  db.users = [
+    {
+      id: "u-ashok",
+      name: "ashok",
+      role: "Area Manager",
+      region: "test",
+      dealerCode: "1001",
+      status: "active",
+    },
+  ];
+  const parsed = parseCsv(createBookingTemplate());
+  const row = {
+    ...parsed.rows[0],
+    "Dealer Code": "1001",
+    "Sales Order Id": "SO-AREA-ONLY",
+    AM: "ashok",
+    Region: "test",
+  };
+
+  const result = upsertBookings(db, [row], { fileName: "area-only.csv" });
+  const booking = db.bookings.find((item) => item.salesOrderId === "SO-AREA-ONLY");
+
+  assert.equal(result.status, "completed");
+  assert.equal(booking.assignedAreaManagerId, "u-ashok");
+  assert.equal(booking.assignedRegionalManagerId, "");
+});
+
 test("startup migration repairs stale booking ids from the dealer map", () => {
   const db = seedData();
   const booking = db.bookings[0];

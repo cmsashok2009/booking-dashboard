@@ -357,7 +357,7 @@ tr:hover td {
 }
 
 .users-table {
-  min-width: 980px;
+  min-width: 1130px;
 }
 
 .editable-users-table th:nth-child(1),
@@ -379,7 +379,17 @@ tr:hover td {
 
 .editable-users-table th:nth-child(5),
 .editable-users-table td:nth-child(5) {
+  min-width: 140px;
+}
+
+.editable-users-table th:nth-child(6),
+.editable-users-table td:nth-child(6) {
   min-width: 145px;
+}
+
+.linked-dealer-code {
+  display: grid;
+  gap: 4px;
 }
 
 .editable-users-table input,

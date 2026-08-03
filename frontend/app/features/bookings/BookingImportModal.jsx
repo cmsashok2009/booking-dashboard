@@ -8,6 +8,67 @@ import FileInput from "../../components/ui/FileInput";
 import ModalShell from "../../components/ui/ModalShell";
 import TableEmptyState from "../../components/ui/TableEmptyState";
 
+const MIN_PREVIEW_COLUMN_WIDTH = 104;
+const MAX_PREVIEW_COLUMN_WIDTH = 340;
+const PREVIEW_COLUMN_BASELINES = {
+  "Dealer Code": 112,
+  "Contact First Name": 144,
+  "Contact Last Name": 144,
+  "Institution Name": 190,
+  "Phone Number": 132,
+  "Sales Order Id": 140,
+  "Creation Date": 132,
+  "Dlr GRP": 104,
+  AM: 104,
+  Region: 112,
+  Category: 120,
+  MODEL: 150,
+  VARIANT: 220,
+  "Color mapped": 130,
+  CAT: 104,
+  VINYEAR: 110,
+  "matching vin stock": 150,
+  "MATCHED STATUS": 220,
+  "AGING BOOKINFS": 112,
+  "AVL STATUS": 200,
+  "RPOS ORDER STATUS": 190,
+  "RPASS BKG": 180,
+  COMB1: 280,
+  "Booking Category": 180,
+  "Wholesales Feedback": 200,
+  "WS Planning": 190,
+  "Expected Retail Date": 150,
+  Remarks: 220,
+  "Wholesale Input": 280,
+  "Retail Input": 280
+};
+
+function clampColumnWidth(width) {
+  return Math.min(MAX_PREVIEW_COLUMN_WIDTH, Math.max(MIN_PREVIEW_COLUMN_WIDTH, Math.round(width)));
+}
+
+function previewColumnWidth(header, columnIndex, rows) {
+  const values = rows.map((row) => String(row[columnIndex] ?? "").trim()).filter(Boolean);
+  const headerText = String(header).replace(/^\uFEFF/, "").trim();
+  const samples = [headerText, ...values];
+  const longestValue = Math.max(...samples.map((value) => value.length), 0);
+  const longestToken = Math.max(
+    ...samples.flatMap((value) => value.split(/[\s/\-]+/)).map((token) => token.length),
+    0
+  );
+  const numericValues = values.length > 0 && values.every((value) => /^(?:#N\/A|\d+(?:\.\d+)?)$/i.test(value));
+  const dateValues = values.length > 0 && values.every((value) => /^\d{4}-\d{2}-\d{2}$/.test(value) || value === "53");
+
+  const baselineWidth = PREVIEW_COLUMN_BASELINES[headerText] || MIN_PREVIEW_COLUMN_WIDTH;
+  const headerWidth = Math.max(longestToken * 8 + 32, Math.ceil(headerText.length / 2) * 7 + 32);
+  if (numericValues) return clampColumnWidth(Math.max(baselineWidth, headerWidth));
+  if (dateValues) return clampColumnWidth(Math.max(baselineWidth, headerWidth, 132));
+
+  const contentWidth =
+    longestValue > 32 ? longestValue * 6.5 + 36 : longestValue > 18 ? longestValue * 7 + 34 : longestValue * 7.5 + 32;
+  return clampColumnWidth(Math.max(baselineWidth, headerWidth, contentWidth));
+}
+
 export default function BookingImportModal({
   open,
   preview,
@@ -20,6 +81,10 @@ export default function BookingImportModal({
 }) {
   const previewHeaders = preview?.headers?.length ? preview.headers : bookingUploadHeaders;
   const previewRows = preview?.rows || [];
+  const previewColumnWidths = previewHeaders.map((header, columnIndex) =>
+    previewColumnWidth(header, columnIndex, previewRows)
+  );
+  const previewTableWidth = previewColumnWidths.reduce((total, width) => total + width, 0);
 
   return (
     <ModalShell
@@ -81,43 +146,41 @@ export default function BookingImportModal({
           </div>
           <span>{previewRows.length} preview rows</span>
         </div>
-        <div className="table-wrap booking-preview-table">
-          <table>
-            <thead>
-              <tr>
-                {previewHeaders.map((header) => (
-                  <th
-                    key={header}
-                    className={["Wholesale Input", "Retail Input"].includes(header) ? "booking-preview-wide-column" : undefined}
-                  >
-                    {header}
-                  </th>
+        <div className="booking-preview-table-shell">
+          <div className="table-wrap booking-preview-table">
+            <table style={{ width: `${previewTableWidth}px` }}>
+              <colgroup>
+                {previewHeaders.map((header, columnIndex) => (
+                  <col key={header} style={{ width: `${previewColumnWidths[columnIndex]}px` }} />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {previewRows.length ? (
-                previewRows.map((row, rowIndex) => (
+              </colgroup>
+              <thead>
+                <tr>
+                  {previewHeaders.map((header) => (
+                    <th key={header}>{String(header).replace(/^\uFEFF/, "")}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {previewRows.map((row, rowIndex) => (
                   <tr key={rowIndex}>
                     {previewHeaders.map((header, index) => (
-                      <td
-                        key={header}
-                        className={["Wholesale Input", "Retail Input"].includes(header) ? "booking-preview-wide-column" : undefined}
-                      >
-                        {displayValue(row[index])}
+                      <td key={header}>
+                        <span className="booking-preview-cell-content" title={String(displayValue(row[index]))}>
+                          {displayValue(row[index])}
+                        </span>
                       </td>
                     ))}
                   </tr>
-                ))
-              ) : (
-                <tr className="booking-preview-empty-row">
-                  <td colSpan={previewHeaders.length}>
-                    <TableEmptyState description="Choose a CSV or use sample data to preview bookings." />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!previewRows.length ? (
+            <div className="booking-preview-empty-overlay">
+              <TableEmptyState description="Choose a CSV or use sample data to preview bookings." />
+            </div>
+          ) : null}
         </div>
         {pendingUpload ? (
           <div className="booking-preview-footer">

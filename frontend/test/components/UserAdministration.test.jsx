@@ -172,8 +172,11 @@ describe("editable users table", () => {
     return { values, ...render(<EditableUsersTable {...values} />) };
   }
 
-  it("sorts columns and shows empty results", async () => {
+  it("shows Dealer Code, sorts supported columns, and shows empty results", async () => {
     const { values, rerender } = renderTable();
+    expect(screen.getByRole("columnheader", { name: "Dealer Code" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "D1" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Dealer Code/ })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Name/ }));
     expect(values.onSort).toHaveBeenCalledWith("name");
     rerender(<EditableUsersTable {...values} users={[]} />);
@@ -216,8 +219,7 @@ describe("editable users table", () => {
     renderTable();
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(screen.getByText("Already exists")).toBeInTheDocument();
-    expect(await screen.findByText("Already exists")).toBeInTheDocument();
+    expect(screen.getAllByText("Already exists")).toHaveLength(2);
   });
 
   it("prompts before discarding dirty edits and supports stay, Escape, and discard", async () => {

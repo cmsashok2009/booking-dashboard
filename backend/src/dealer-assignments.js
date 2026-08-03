@@ -24,15 +24,43 @@ function activeManager(users, role, region, managerName = "") {
   );
 }
 
+function activeAreaManager(db, booking) {
+  const code = normalizeDealerCode(booking.dealerCode);
+  const mappedUser = db.users.find(
+    (user) =>
+      user.status === "active" &&
+      user.role === "Area Manager" &&
+      normalizeDealerCode(user.dealerCode) === code &&
+      user.region === booking.region
+  );
+  if (mappedUser) return mappedUser;
+
+  const knownDealerCode =
+    (db.dealerCodes || []).some(
+      (item) =>
+        item.status !== "inactive" &&
+        normalizeDealerCode(item.code) === code &&
+        item.region === booking.region
+    ) ||
+    (db.bookings || []).some(
+      (item) =>
+        normalizeDealerCode(item.dealerCode) === code &&
+        item.region === booking.region
+    );
+  return knownDealerCode
+    ? activeManager(db.users, "Area Manager", booking.region, booking.amNameFromFile)
+    : null;
+}
+
 export function assignmentFromBooking(db, booking) {
-  const areaManager = activeManager(db.users, "Area Manager", booking.region, booking.amNameFromFile);
+  const areaManager = activeAreaManager(db, booking);
   const regionalManager = activeManager(db.users, "Regional Manager", booking.region);
-  if (!areaManager || !regionalManager) return null;
+  if (!areaManager) return null;
   return {
     id: `dealer-${normalizeDealerCode(booking.dealerCode).toLowerCase()}`,
     dealerCode: normalizeDealerCode(booking.dealerCode),
     areaManagerUserId: areaManager.id,
-    regionalManagerUserId: regionalManager.id,
+    regionalManagerUserId: regionalManager?.id || "",
     region: booking.region,
     isActive: true
   };
@@ -51,8 +79,10 @@ export function ensureDealerAssignments(db) {
       const generated = assignmentFromBooking(db, booking);
       if (!generated) continue;
       assignment = { ...generated, createdAt: now, updatedAt: now };
-      db.dealerAssignments.push(assignment);
-      changed = true;
+      if (assignment.regionalManagerUserId) {
+        db.dealerAssignments.push(assignment);
+        changed = true;
+      }
     }
     if (
       booking.assignedAreaManagerId !== assignment.areaManagerUserId ||
@@ -70,11 +100,16 @@ export function ensureDealerAssignments(db) {
 export function validateDealerAssignments(rows, db) {
   const errors = [];
   rows.forEach((row, index) => {
-    if (!dealerAssignmentForCode(db, row["Dealer Code"])) {
+    const booking = {
+      dealerCode: row["Dealer Code"],
+      region: row.Region,
+      amNameFromFile: row.AM
+    };
+    if (!dealerAssignmentForCode(db, row["Dealer Code"]) && !assignmentFromBooking(db, booking)) {
       errors.push({
         rowNumber: index + 2,
         columnName: "Dealer Code",
-        errorMessage: "Dealer Code does not have an active Area Manager and Regional Manager mapping",
+        errorMessage: "Dealer Code does not have an active Area Manager mapping",
         rawValue: row["Dealer Code"] || ""
       });
     }

@@ -1200,3 +1200,45 @@ No implementation phase is complete until its verification evidence is recorded 
 - Evidence: `docs/quality-reports/compact-booking-import-preview-2026-08-03.md`.
 
 - Compact booking-import follow-up: combined the Data Import label, title, and description into one desktop line; merged file selection, template download, and sample-data actions into one desktop toolbar; pinned upload actions to an opaque sticky footer for short viewports. Mobile retains intentional wrapping. Stylelint, focused component tests, ESLint, and the production build passed; browser evidence remains blocked by the recorded ACL runtime failure.
+
+- Booking import empty-preview follow-up: widened the feature modal for its high-column-count workflow, rendered canonical booking upload headers before file selection, reused TableEmptyState with actionable guidance, preserved the same populated table in place, and widened Wholesale/Retail Input columns when present. Focused tests 3/3, ESLint, Stylelint, and production build passed; browser evidence remains blocked by the recorded ACL runtime failure.
+
+- Booking preview readability follow-up: raised standard preview columns to a 132px minimum with 13x16px cell padding and 1.5 line height; assigned 240px widths to long model, status, planning, remark, and wholesale/retail input fields while retaining contained horizontal scrolling. Focused tests 3/3, ESLint, Stylelint, and production build passed; browser evidence remains blocked by the recorded ACL runtime failure.
+
+- Booking preview row-height correction: replaced automatic table sizing with deterministic colgroup widths (112/152/220/280px), capped visible cell content at three lines, fixed data rows at a scannable height, and retained complete values in native hover titles. Focused tests 3/3, ESLint, Stylelint, and production build passed; browser evidence remains blocked by the recorded ACL runtime failure.
+
+- Booking preview adaptive-width follow-up: replaced fixed width buckets with a hybrid strategy combining stable per-column domain baselines and sampled CSV content measurement, bounded to 104-340px. Added numeric/date handling, three-line cell disclosure, full-value titles, UTF-8 BOM header normalization, and executable adaptive-width coverage. Focused modal/CSV tests 11/11, ESLint, Stylelint, and production build passed; browser evidence remains blocked by the recorded ACL runtime failure.
+
+- Booking preview width-enforcement correction: identified that fixed-layout col widths were undermined by max-content table sizing. The component now calculates all hybrid column widths once, sums them, and assigns the exact total to the table so the browser cannot redistribute columns. Regression coverage asserts table width equals the column sum. Focused tests 11/11, ESLint, Stylelint, and production build passed; browser evidence remains blocked by the recorded ACL runtime failure.
+
+- Booking upload validation-feedback follow-up: deduplicated identical row failures into one message with affected-row counts and bounded additional-issue disclosure. The Dealer Code mapping validation remains authoritative and preview state remains available for retry. Controller tests 25/25 and ESLint passed; frontend Docker image rebuilt and all four Compose services are healthy.
+
+- Booking preview floating empty-state follow-up: moved TableEmptyState out of the scrollable table row into a viewport shell overlay anchored below the sticky headers. The state remains centered while the header scrolls horizontally/vertically and does not intercept pointer input. Component tests 4/4, ESLint, Stylelint, and Docker production build passed; frontend is healthy on localhost:3000.
+
+
+### 2026-08-03 - Current Users Dealer Code Visibility
+
+- Applicable controls: UI-004, UI-009-012, UI-019, UI-025; UX-001, UX-013, UX-018, UX-020. API controls are N/A because the existing user contract and export already include `dealerCode`.
+- Added a dedicated Dealer Code column between Region and Status, with `Not assigned` for empty mappings. Inline editing keeps Dealer Code coupled to the Region control and identifies that relationship in the display column.
+- Verification: focused User Administration tests 12/12, changed-file ESLint, Stylelint, Next.js production build, Docker frontend rebuild, Compose frontend/backend health, and localhost HTTP 200 passed.
+- Browser desktop/mobile evidence remains BLOCKED by the Windows ACL browser-runtime failure; no visual completion claim is made.
+- Evidence: `docs/quality-reports/current-users-dealer-code-2026-08-03.md`.
+
+
+### 2026-08-03 - Booking Import Area Manager Mapping
+
+- Applicable controls: API-003, API-006, API-009, API-026, API-029; UI-009, UI-020, UI-025; UX-008, UX-009, UX-011, UX-020, UX-023, UX-024.
+- Fixed the split source-of-truth defect between User Management and booking import. Imports now resolve an exact active Area Manager by Dealer Code and Region directly from users, preserve compatible canonical mappings, reject unknown Dealer Codes, and treat Regional Manager as optional for booking assignment.
+- Updated the safe aggregated failure message to identify only the required active Area Manager mapping.
+- Verification: exact five-row CSV simulation completed with 5 inserted/0 failed; focused backend 26/26, full backend 214 passed/5 documented skips/0 failed, frontend feedback 25/25, architecture gate, Docker rebuild, service health, and localhost HTTP probes passed.
+- Browser desktop/mobile evidence remains BLOCKED by the Windows ACL browser-runtime failure; no screenshot completion claim is made.
+- Evidence: `docs/quality-reports/booking-import-area-manager-mapping-2026-08-03.md`.
+
+
+### 2026-08-03 - Notification Drawer UX and Token Compliance
+
+- Applicable controls: UI-001, UI-004-007, UI-009-016, UI-018, UI-021, UI-025; UX-001, UX-011, UX-013-015, UX-017, UX-020, UX-024. API controls are N/A because notification contracts and read behavior did not change.
+- Reworked notification rows into a compact, stable three-column list pattern with an unread marker, title, event type, semantic timestamp, and Lucide chevron. Removed the raw arrow action text and added a complete accessible action name.
+- Made the feature selector authoritative over the global primary-button hover rule and moved default, hover, focus, and active states to shared interaction tokens. Hover now uses the neutral `#f3f6fa` token with readable text and a stable inset brand accent.
+- Verification: component 8/8, changed-file ESLint, Stylelint, production build, Docker rebuild, healthy services, and localhost HTTP 200 passed. Desktop/mobile Playwright passed 2/2 with Axe, overflow, computed hover-color, responsive workflow, and screenshot evidence.
+- Evidence: `docs/quality-reports/notification-drawer-ux-2026-08-03.md` and `frontend/docs/evidence/screenshots/notification-history-{chromium,mobile-chromium}.png`.
